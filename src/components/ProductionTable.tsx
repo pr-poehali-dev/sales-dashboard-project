@@ -11,6 +11,7 @@ interface ProductionTableProps {
   onDelete: (id: string) => void;
   onUpdateActual: (id: string, actualQuantity: number) => void;
   onViewBlueprint: (blueprint?: string) => void;
+  machines: string[];
 }
 
 export const ProductionTable = ({ 
@@ -18,7 +19,8 @@ export const ProductionTable = ({
   onEdit, 
   onDelete, 
   onUpdateActual,
-  onViewBlueprint 
+  onViewBlueprint,
+  machines
 }: ProductionTableProps) => {
   const calculateCompletion = (task: ProductionTask) => {
     if (task.plannedQuantity === 0) return 0;
@@ -39,13 +41,18 @@ export const ProductionTable = ({
     return "bg-red-100 text-red-700 border-red-200";
   };
 
-  const getMachineColor = (machine: string) => {
-    switch (machine) {
-      case 'Станок №1': return "bg-purple-100 text-purple-700 border-purple-200";
-      case 'Станок №2': return "bg-blue-100 text-blue-700 border-blue-200";
-      case 'Станок №3': return "bg-teal-100 text-teal-700 border-teal-200";
-      default: return "bg-gray-100 text-gray-700 border-gray-200";
-    }
+  const colorClasses = [
+    "bg-purple-100 text-purple-700 border-purple-200",
+    "bg-blue-100 text-blue-700 border-blue-200",
+    "bg-teal-100 text-teal-700 border-teal-200",
+    "bg-orange-100 text-orange-700 border-orange-200",
+    "bg-pink-100 text-pink-700 border-pink-200",
+    "bg-indigo-100 text-indigo-700 border-indigo-200",
+  ];
+
+  const getMachineColor = (machine: string, machines: string[]) => {
+    const index = machines.indexOf(machine);
+    return index >= 0 ? colorClasses[index % colorClasses.length] : "bg-gray-100 text-gray-700 border-gray-200";
   };
 
   return (
@@ -87,7 +94,7 @@ export const ProductionTable = ({
                   <TableCell>{task.timePerPart}м</TableCell>
                   <TableCell className="text-muted-foreground">{calculateTotalTime(task)}</TableCell>
                   <TableCell>
-                    <Badge variant="outline" className={getMachineColor(task.machine)}>
+                    <Badge variant="outline" className={getMachineColor(task.machine, machines)}>
                       {task.machine}
                     </Badge>
                   </TableCell>

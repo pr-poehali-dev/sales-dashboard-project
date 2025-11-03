@@ -2,13 +2,14 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import Icon from "@/components/ui/icon";
-import { ProductionTask, DayOfWeek, Machine } from "@/types/production";
+import { ProductionTask, DayOfWeek, Settings } from "@/types/production";
 import { ProductionTable } from "@/components/ProductionTable";
 import { TaskDialog } from "@/components/TaskDialog";
 import { BlueprintViewer } from "@/components/BlueprintViewer";
 import { MachineLoadChart } from "@/components/MachineLoadChart";
 import { CompletionChart } from "@/components/CompletionChart";
 import { ProductionStats } from "@/components/ProductionStats";
+import { SettingsDialog } from "@/components/SettingsDialog";
 
 const mockTasks: ProductionTask[] = [
   {
@@ -67,20 +68,32 @@ const Index = () => {
   const [tasks, setTasks] = useState<ProductionTask[]>([]);
   const [filteredTasks, setFilteredTasks] = useState<ProductionTask[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<ProductionTask | undefined>();
   const [blueprintViewerOpen, setBlueprintViewerOpen] = useState(false);
   const [currentBlueprint, setCurrentBlueprint] = useState<string | undefined>();
   
+  const [settings, setSettings] = useState<Settings>({
+    machines: ['Станок №1', 'Станок №2', 'Станок №3'],
+    operators: ['Иванов И.И.', 'Петров П.П.', 'Сидоров С.С.', 'Кузнецов К.К.'],
+  });
+  
   const [filterDay, setFilterDay] = useState<DayOfWeek | 'Все'>('Все');
-  const [filterMachine, setFilterMachine] = useState<Machine | 'Все'>('Все');
+  const [filterMachine, setFilterMachine] = useState<string | 'Все'>('Все');
   const [filterOperator, setFilterOperator] = useState<string>('Все');
 
   useEffect(() => {
     const savedTasks = localStorage.getItem('productionTasks');
+    const savedSettings = localStorage.getItem('productionSettings');
+    
     if (savedTasks) {
       setTasks(JSON.parse(savedTasks));
     } else {
       setTasks(mockTasks);
+    }
+    
+    if (savedSettings) {
+      setSettings(JSON.parse(savedSettings));
     }
   }, []);
 
@@ -89,6 +102,10 @@ const Index = () => {
       localStorage.setItem('productionTasks', JSON.stringify(tasks));
     }
   }, [tasks]);
+  
+  useEffect(() => {
+    localStorage.setItem('productionSettings', JSON.stringify(settings));
+  }, [settings]);
 
   useEffect(() => {
     let filtered = tasks;
@@ -147,6 +164,10 @@ const Index = () => {
     }
   };
 
+  const handleSaveSettings = (newSettings: Settings) => {
+    setSettings(newSettings);
+  };
+
   const uniqueOperators = Array.from(new Set(tasks.map(t => t.operator)));
 
   return (
@@ -157,16 +178,22 @@ const Index = () => {
             <h1 className="text-3xl font-bold text-foreground">Производственный дашборд</h1>
             <p className="text-muted-foreground mt-1">Участок металлообработки - планирование и учёт</p>
           </div>
-          <Button onClick={handleAddTask} size="lg">
-            <Icon name="Plus" size={18} className="mr-2" />
-            Добавить деталь
-          </Button>
+          <div className="flex gap-2">
+            <Button onClick={() => setSettingsOpen(true)} variant="outline" size="lg">
+              <Icon name="Settings" size={18} className="mr-2" />
+              Настройки
+            </Button>
+            <Button onClick={handleAddTask} size="lg">
+              <Icon name="Plus" size={18} className="mr-2" />
+              Добавить деталь
+            </Button>
+          </div>
         </header>
 
         <ProductionStats tasks={tasks} />
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <MachineLoadChart tasks={tasks} />
+          <MachineLoadChart tasks={tasks} machines={settings.machines} />
           <CompletionChart tasks={tasks} />
         </div>
 
@@ -197,15 +224,15 @@ const Index = () => {
 
           <div className="flex items-center gap-2">
             <label className="text-sm text-muted-foreground">Станок:</label>
-            <Select value={filterMachine} onValueChange={(value) => setFilterMachine(value as Machine | 'Все')}>
+            <Select value={filterMachine} onValueChange={(value) => setFilterMachine(value)}>
               <SelectTrigger className="w-32">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="Все">Все</SelectItem>
-                <SelectItem value="Станок №1">Станок №1</SelectItem>
-                <SelectItem value="Станок №2">Станок №2</SelectItem>
-                <SelectItem value="Станок №3">Станок №3</SelectItem>
+                {settings.machines.map(machine => (
+                  <SelectItem key={machine} value={machine}>{machine}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
@@ -247,6 +274,7 @@ const Index = () => {
           onDelete={handleDeleteTask}
           onUpdateActual={handleUpdateActual}
           onViewBlueprint={handleViewBlueprint}
+          machines={settings.machines}
         />
 
         <TaskDialog
@@ -254,6 +282,15 @@ const Index = () => {
           onOpenChange={setDialogOpen}
           task={editingTask}
           onSave={handleSaveTask}
+          machines={settings.machines}
+          operators={settings.operators}
+        />
+        
+        <SettingsDialog
+          open={settingsOpen}
+          onOpenChange={setSettingsOpen}
+          settings={settings}
+          onSave={handleSaveSettings}
         />
 
         <BlueprintViewer

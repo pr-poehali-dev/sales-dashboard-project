@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ProductionTask, DayOfWeek, Machine } from "@/types/production";
+import { ProductionTask, DayOfWeek } from "@/types/production";
 import Icon from "@/components/ui/icon";
 
 interface TaskDialogProps {
@@ -12,19 +12,19 @@ interface TaskDialogProps {
   onOpenChange: (open: boolean) => void;
   task?: ProductionTask;
   onSave: (task: Omit<ProductionTask, 'id'>) => void;
+  machines: string[];
+  operators: string[];
 }
 
 const daysOfWeek: DayOfWeek[] = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
-const machines: Machine[] = ['Станок №1', 'Станок №2', 'Станок №3'];
-const operators = ['Иванов И.И.', 'Петров П.П.', 'Сидоров С.С.', 'Кузнецов К.К.'];
 
-export const TaskDialog = ({ open, onOpenChange, task, onSave }: TaskDialogProps) => {
+export const TaskDialog = ({ open, onOpenChange, task, onSave, machines, operators }: TaskDialogProps) => {
   const [formData, setFormData] = useState({
     dayOfWeek: 'Пн' as DayOfWeek,
     partName: '',
     plannedQuantity: 0,
     timePerPart: 0,
-    machine: 'Станок №1' as Machine,
+    machine: machines[0] || '',
     operator: '',
     blueprint: '',
     actualQuantity: 0,
@@ -50,14 +50,14 @@ export const TaskDialog = ({ open, onOpenChange, task, onSave }: TaskDialogProps
         partName: '',
         plannedQuantity: 0,
         timePerPart: 0,
-        machine: 'Станок №1',
+        machine: machines[0] || '',
         operator: '',
         blueprint: '',
         actualQuantity: 0,
       });
       setBlueprintFile(null);
     }
-  }, [task, open]);
+  }, [task, open, machines]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -135,7 +135,7 @@ export const TaskDialog = ({ open, onOpenChange, task, onSave }: TaskDialogProps
 
           <div className="space-y-2">
             <Label htmlFor="machine">Станок</Label>
-            <Select value={formData.machine} onValueChange={(value) => setFormData(prev => ({ ...prev, machine: value as Machine }))}>
+            <Select value={formData.machine} onValueChange={(value) => setFormData(prev => ({ ...prev, machine: value }))}>
               <SelectTrigger id="machine">
                 <SelectValue />
               </SelectTrigger>

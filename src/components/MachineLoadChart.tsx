@@ -1,27 +1,34 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ProductionTask, DayOfWeek, Machine } from "@/types/production";
+import { ProductionTask, DayOfWeek } from "@/types/production";
 import Icon from "@/components/ui/icon";
 
 interface MachineLoadChartProps {
   tasks: ProductionTask[];
+  machines: string[];
 }
 
 const daysOfWeek: DayOfWeek[] = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
-const machines: Machine[] = ['Станок №1', 'Станок №2', 'Станок №3'];
 
-const machineColors = {
-  'Станок №1': 'bg-purple-500',
-  'Станок №2': 'bg-blue-500',
-  'Станок №3': 'bg-teal-500',
-};
+const colorClasses = [
+  'bg-purple-500',
+  'bg-blue-500',
+  'bg-teal-500',
+  'bg-orange-500',
+  'bg-pink-500',
+  'bg-indigo-500',
+  'bg-cyan-500',
+  'bg-emerald-500',
+];
 
-export const MachineLoadChart = ({ tasks }: MachineLoadChartProps) => {
+const getMachineColor = (index: number) => colorClasses[index % colorClasses.length];
+
+export const MachineLoadChart = ({ tasks, machines }: MachineLoadChartProps) => {
   const calculateLoad = () => {
-    const loadData: { [key: string]: { [key in DayOfWeek]?: number } } = {
-      'Станок №1': {},
-      'Станок №2': {},
-      'Станок №3': {},
-    };
+    const loadData: { [key: string]: { [key in DayOfWeek]?: number } } = {};
+    
+    machines.forEach(machine => {
+      loadData[machine] = {};
+    });
 
     tasks.forEach(task => {
       const totalMinutes = task.plannedQuantity * task.timePerPart;
@@ -54,10 +61,10 @@ export const MachineLoadChart = ({ tasks }: MachineLoadChartProps) => {
       </CardHeader>
       <CardContent>
         <div className="space-y-6">
-          {machines.map(machine => (
+          {machines.map((machine, index) => (
             <div key={machine} className="space-y-2">
               <div className="flex items-center gap-2">
-                <div className={`w-3 h-3 rounded ${machineColors[machine]}`} />
+                <div className={`w-3 h-3 rounded ${getMachineColor(index)}`} />
                 <span className="font-medium text-sm">{machine}</span>
               </div>
               <div className="grid grid-cols-7 gap-2">
@@ -72,7 +79,7 @@ export const MachineLoadChart = ({ tasks }: MachineLoadChartProps) => {
                         {hours > 0 && (
                           <>
                             <div 
-                              className={`${machineColors[machine]} ${isOverloaded ? 'opacity-100 animate-pulse' : 'opacity-80'} rounded transition-all`}
+                              className={`${getMachineColor(index)} ${isOverloaded ? 'opacity-100 animate-pulse' : 'opacity-80'} rounded transition-all`}
                               style={{ height: `${Math.min(heightPercent, 100)}%` }}
                             />
                             <span className="absolute top-1 left-0 right-0 text-center text-xs font-semibold text-foreground">
