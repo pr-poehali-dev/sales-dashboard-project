@@ -1,189 +1,266 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import Icon from "@/components/ui/icon";
-import { useState } from "react";
+import { ProductionTask, DayOfWeek, Machine } from "@/types/production";
+import { ProductionTable } from "@/components/ProductionTable";
+import { TaskDialog } from "@/components/TaskDialog";
+import { BlueprintViewer } from "@/components/BlueprintViewer";
+import { MachineLoadChart } from "@/components/MachineLoadChart";
+import { CompletionChart } from "@/components/CompletionChart";
+import { ProductionStats } from "@/components/ProductionStats";
 
-const salesFunnelData = [
-  { stage: "Новые лиды", count: 150, percentage: 100, color: "bg-blue-500" },
-  { stage: "Квалификация", count: 95, percentage: 63, color: "bg-blue-400" },
-  { stage: "Презентация", count: 58, percentage: 39, color: "bg-blue-300" },
-  { stage: "Коммерческое предложение", count: 32, percentage: 21, color: "bg-blue-200" },
-  { stage: "Закрыто успешно", count: 24, percentage: 16, color: "bg-green-500" },
-];
-
-const clientsData = [
-  { id: 1, name: "ООО Техносервис", contact: "Иванов И.И.", stage: "Квалификация", value: 450000, priority: "high" },
-  { id: 2, name: "АО Промснаб", contact: "Петрова А.С.", stage: "Презентация", value: 1200000, priority: "high" },
-  { id: 3, name: "ИП Соколов", contact: "Соколов М.В.", stage: "Коммерческое предложение", value: 280000, priority: "medium" },
-  { id: 4, name: "ЗАО Стройинвест", contact: "Кузнецова О.П.", stage: "Закрыто успешно", value: 3500000, priority: "low" },
-  { id: 5, name: "ООО Логистик Плюс", contact: "Морозов Д.А.", stage: "Новые лиды", value: 650000, priority: "medium" },
-  { id: 6, name: "АО Энергосбыт", contact: "Волкова Е.И.", stage: "Квалификация", value: 890000, priority: "high" },
-  { id: 7, name: "ООО РосТранс", contact: "Лебедев С.Н.", stage: "Презентация", value: 420000, priority: "medium" },
-  { id: 8, name: "ИП Федоров", contact: "Федоров Г.К.", stage: "Новые лиды", value: 180000, priority: "low" },
-];
-
-const metricsData = [
-  { title: "Общая выручка", value: "7 570 000 ₽", change: "+12.5%", icon: "TrendingUp", positive: true },
-  { title: "Активные сделки", value: "58", change: "+8", icon: "FileText", positive: true },
-  { title: "Конверсия", value: "16%", change: "-2%", icon: "Target", positive: false },
-  { title: "Средний чек", value: "1 458 333 ₽", change: "+18%", icon: "DollarSign", positive: true },
+const mockTasks: ProductionTask[] = [
+  {
+    id: '1',
+    dayOfWeek: 'Пн',
+    partName: 'Втулка Ø50',
+    plannedQuantity: 100,
+    timePerPart: 15,
+    machine: 'Станок №1',
+    operator: 'Иванов И.И.',
+    actualQuantity: 95,
+  },
+  {
+    id: '2',
+    dayOfWeek: 'Пн',
+    partName: 'Вал Ø30',
+    plannedQuantity: 50,
+    timePerPart: 30,
+    machine: 'Станок №2',
+    operator: 'Петров П.П.',
+    actualQuantity: 50,
+  },
+  {
+    id: '3',
+    dayOfWeek: 'Вт',
+    partName: 'Фланец М20',
+    plannedQuantity: 80,
+    timePerPart: 20,
+    machine: 'Станок №1',
+    operator: 'Иванов И.И.',
+    actualQuantity: 0,
+  },
+  {
+    id: '4',
+    dayOfWeek: 'Ср',
+    partName: 'Шпонка 10х8',
+    plannedQuantity: 200,
+    timePerPart: 5,
+    machine: 'Станок №3',
+    operator: 'Сидоров С.С.',
+    actualQuantity: 0,
+  },
+  {
+    id: '5',
+    dayOfWeek: 'Чт',
+    partName: 'Корпус подшипника',
+    plannedQuantity: 40,
+    timePerPart: 45,
+    machine: 'Станок №2',
+    operator: 'Петров П.П.',
+    actualQuantity: 0,
+  },
 ];
 
 const Index = () => {
-  const [sortBy, setSortBy] = useState<"name" | "value" | "stage">("value");
+  const [tasks, setTasks] = useState<ProductionTask[]>([]);
+  const [filteredTasks, setFilteredTasks] = useState<ProductionTask[]>([]);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingTask, setEditingTask] = useState<ProductionTask | undefined>();
+  const [blueprintViewerOpen, setBlueprintViewerOpen] = useState(false);
+  const [currentBlueprint, setCurrentBlueprint] = useState<string | undefined>();
+  
+  const [filterDay, setFilterDay] = useState<DayOfWeek | 'Все'>('Все');
+  const [filterMachine, setFilterMachine] = useState<Machine | 'Все'>('Все');
+  const [filterOperator, setFilterOperator] = useState<string>('Все');
 
-  const sortedClients = [...clientsData].sort((a, b) => {
-    if (sortBy === "value") return b.value - a.value;
-    if (sortBy === "name") return a.name.localeCompare(b.name);
-    return 0;
-  });
+  useEffect(() => {
+    const savedTasks = localStorage.getItem('productionTasks');
+    if (savedTasks) {
+      setTasks(JSON.parse(savedTasks));
+    } else {
+      setTasks(mockTasks);
+    }
+  }, []);
 
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case "high": return "bg-red-100 text-red-700 border-red-200";
-      case "medium": return "bg-yellow-100 text-yellow-700 border-yellow-200";
-      case "low": return "bg-green-100 text-green-700 border-green-200";
-      default: return "";
+  useEffect(() => {
+    if (tasks.length > 0) {
+      localStorage.setItem('productionTasks', JSON.stringify(tasks));
+    }
+  }, [tasks]);
+
+  useEffect(() => {
+    let filtered = tasks;
+    
+    if (filterDay !== 'Все') {
+      filtered = filtered.filter(task => task.dayOfWeek === filterDay);
+    }
+    
+    if (filterMachine !== 'Все') {
+      filtered = filtered.filter(task => task.machine === filterMachine);
+    }
+    
+    if (filterOperator !== 'Все') {
+      filtered = filtered.filter(task => task.operator === filterOperator);
+    }
+    
+    setFilteredTasks(filtered);
+  }, [tasks, filterDay, filterMachine, filterOperator]);
+
+  const handleAddTask = () => {
+    setEditingTask(undefined);
+    setDialogOpen(true);
+  };
+
+  const handleEditTask = (task: ProductionTask) => {
+    setEditingTask(task);
+    setDialogOpen(true);
+  };
+
+  const handleSaveTask = (taskData: Omit<ProductionTask, 'id'>) => {
+    if (editingTask) {
+      setTasks(prev => prev.map(t => t.id === editingTask.id ? { ...taskData, id: editingTask.id } : t));
+    } else {
+      const newTask: ProductionTask = {
+        ...taskData,
+        id: Date.now().toString(),
+      };
+      setTasks(prev => [...prev, newTask]);
     }
   };
 
+  const handleDeleteTask = (id: string) => {
+    if (confirm('Удалить задание из плана?')) {
+      setTasks(prev => prev.filter(t => t.id !== id));
+    }
+  };
+
+  const handleUpdateActual = (id: string, actualQuantity: number) => {
+    setTasks(prev => prev.map(t => t.id === id ? { ...t, actualQuantity } : t));
+  };
+
+  const handleViewBlueprint = (blueprint?: string) => {
+    if (blueprint) {
+      setCurrentBlueprint(blueprint);
+      setBlueprintViewerOpen(true);
+    }
+  };
+
+  const uniqueOperators = Array.from(new Set(tasks.map(t => t.operator)));
+
   return (
     <div className="min-h-screen bg-background p-6">
-      <div className="max-w-7xl mx-auto space-y-6">
+      <div className="max-w-[1600px] mx-auto space-y-6">
         <header className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-foreground">Дашборд отдела продаж</h1>
-            <p className="text-muted-foreground mt-1">Обзор ключевых метрик и активных сделок</p>
+            <h1 className="text-3xl font-bold text-foreground">Производственный дашборд</h1>
+            <p className="text-muted-foreground mt-1">Участок металлообработки - планирование и учёт</p>
           </div>
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Icon name="Calendar" size={16} />
-            <span>Обновлено: {new Date().toLocaleDateString('ru-RU')}</span>
-          </div>
+          <Button onClick={handleAddTask} size="lg">
+            <Icon name="Plus" size={18} className="mr-2" />
+            Добавить деталь
+          </Button>
         </header>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {metricsData.map((metric, index) => (
-            <Card key={index} className="hover:shadow-lg transition-shadow">
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">
-                  {metric.title}
-                </CardTitle>
-                <div className={`p-2 rounded-lg ${metric.positive ? 'bg-green-100' : 'bg-red-100'}`}>
-                  <Icon name={metric.icon} size={18} className={metric.positive ? 'text-green-600' : 'text-red-600'} />
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{metric.value}</div>
-                <p className={`text-xs flex items-center gap-1 mt-1 ${metric.positive ? 'text-green-600' : 'text-red-600'}`}>
-                  <Icon name={metric.positive ? "ArrowUp" : "ArrowDown"} size={12} />
-                  {metric.change} за месяц
-                </p>
-              </CardContent>
-            </Card>
-          ))}
+        <ProductionStats tasks={tasks} />
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <MachineLoadChart tasks={tasks} />
+          <CompletionChart tasks={tasks} />
         </div>
 
-        <Card className="col-span-full">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Icon name="Filter" size={20} />
-              Воронка продаж
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {salesFunnelData.map((stage, index) => (
-                <div key={index} className="space-y-2">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="font-medium">{stage.stage}</span>
-                    <div className="flex items-center gap-4">
-                      <span className="text-muted-foreground">{stage.count} сделок</span>
-                      <span className="font-semibold">{stage.percentage}%</span>
-                    </div>
-                  </div>
-                  <div className="h-8 bg-muted rounded-lg overflow-hidden">
-                    <div
-                      className={`h-full ${stage.color} transition-all duration-500 flex items-center justify-end px-4 text-white text-sm font-medium`}
-                      style={{ width: `${stage.percentage}%` }}
-                    >
-                      {stage.percentage > 15 && `${stage.count}`}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-              <div className="flex items-start gap-3">
-                <Icon name="Info" size={20} className="text-blue-600 mt-0.5" />
-                <div>
-                  <p className="font-medium text-blue-900">Конверсия воронки</p>
-                  <p className="text-sm text-blue-700 mt-1">
-                    Из 150 новых лидов успешно закрыто 24 сделки (16% конверсия). 
-                    Средняя конверсия по рынку составляет 18-22%.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <div className="flex flex-wrap gap-4 items-center bg-card p-4 rounded-lg border">
+          <div className="flex items-center gap-2">
+            <Icon name="Filter" size={18} className="text-muted-foreground" />
+            <span className="text-sm font-medium">Фильтры:</span>
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <label className="text-sm text-muted-foreground">День:</label>
+            <Select value={filterDay} onValueChange={(value) => setFilterDay(value as DayOfWeek | 'Все')}>
+              <SelectTrigger className="w-24">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Все">Все</SelectItem>
+                <SelectItem value="Пн">Пн</SelectItem>
+                <SelectItem value="Вт">Вт</SelectItem>
+                <SelectItem value="Ср">Ср</SelectItem>
+                <SelectItem value="Чт">Чт</SelectItem>
+                <SelectItem value="Пт">Пт</SelectItem>
+                <SelectItem value="Сб">Сб</SelectItem>
+                <SelectItem value="Вс">Вс</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
 
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle className="flex items-center gap-2">
-                <Icon name="Users" size={20} />
-                Активные клиенты
-              </CardTitle>
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground">Сортировка:</span>
-                <select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value as "name" | "value" | "stage")}
-                  className="text-sm border border-input rounded-md px-3 py-1 bg-background"
-                >
-                  <option value="value">По сумме</option>
-                  <option value="name">По названию</option>
-                  <option value="stage">По этапу</option>
-                </select>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Клиент</TableHead>
-                  <TableHead>Контакт</TableHead>
-                  <TableHead>Этап</TableHead>
-                  <TableHead>Приоритет</TableHead>
-                  <TableHead className="text-right">Сумма сделки</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {sortedClients.map((client) => (
-                  <TableRow key={client.id} className="hover:bg-muted/50">
-                    <TableCell className="font-medium">{client.name}</TableCell>
-                    <TableCell className="text-muted-foreground">{client.contact}</TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-                        {client.stage}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className={getPriorityColor(client.priority)}>
-                        {client.priority === "high" ? "Высокий" : client.priority === "medium" ? "Средний" : "Низкий"}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right font-semibold">
-                      {client.value.toLocaleString('ru-RU')} ₽
-                    </TableCell>
-                  </TableRow>
+          <div className="flex items-center gap-2">
+            <label className="text-sm text-muted-foreground">Станок:</label>
+            <Select value={filterMachine} onValueChange={(value) => setFilterMachine(value as Machine | 'Все')}>
+              <SelectTrigger className="w-32">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Все">Все</SelectItem>
+                <SelectItem value="Станок №1">Станок №1</SelectItem>
+                <SelectItem value="Станок №2">Станок №2</SelectItem>
+                <SelectItem value="Станок №3">Станок №3</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <label className="text-sm text-muted-foreground">Оператор:</label>
+            <Select value={filterOperator} onValueChange={setFilterOperator}>
+              <SelectTrigger className="w-40">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Все">Все</SelectItem>
+                {uniqueOperators.map(operator => (
+                  <SelectItem key={operator} value={operator}>{operator}</SelectItem>
                 ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {(filterDay !== 'Все' || filterMachine !== 'Все' || filterOperator !== 'Все') && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setFilterDay('Все');
+                setFilterMachine('Все');
+                setFilterOperator('Все');
+              }}
+            >
+              <Icon name="X" size={16} className="mr-1" />
+              Сбросить
+            </Button>
+          )}
+        </div>
+
+        <ProductionTable
+          tasks={filteredTasks}
+          onEdit={handleEditTask}
+          onDelete={handleDeleteTask}
+          onUpdateActual={handleUpdateActual}
+          onViewBlueprint={handleViewBlueprint}
+        />
+
+        <TaskDialog
+          open={dialogOpen}
+          onOpenChange={setDialogOpen}
+          task={editingTask}
+          onSave={handleSaveTask}
+        />
+
+        <BlueprintViewer
+          open={blueprintViewerOpen}
+          onOpenChange={setBlueprintViewerOpen}
+          blueprintUrl={currentBlueprint}
+        />
       </div>
     </div>
   );
