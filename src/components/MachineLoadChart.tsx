@@ -23,6 +23,8 @@ const colorClasses = [
 
 const getMachineColor = (index: number) => colorClasses[index % colorClasses.length];
 
+const WORKING_HOURS_PER_DAY = 11; // 12 часов рабочий день - 1 час обед
+
 export const MachineLoadChart = ({ tasks, machines }: MachineLoadChartProps) => {
   const calculateLoad = () => {
     const loadData: { [key: string]: { [key in DayOfWeek]?: number } } = {};
@@ -31,21 +33,43 @@ export const MachineLoadChart = ({ tasks, machines }: MachineLoadChartProps) => 
     machines.forEach(machine => {
       loadData[machine] = {};
       tasksByMachineDay[machine] = {};
+      daysOfWeek.forEach(day => {
+        loadData[machine][day] = 0;
+        tasksByMachineDay[machine][day] = [];
+      });
     });
 
+    // Распределяем задачи с учётом рабочих часов
     tasks.forEach(task => {
       const totalMinutes = task.plannedQuantity * task.timePerPart;
-      const hours = totalMinutes / 60;
+      let remainingHours = totalMinutes / 60;
       
-      if (!loadData[task.machine][task.dayOfWeek]) {
-        loadData[task.machine][task.dayOfWeek] = 0;
+      const dayIndex = daysOfWeek.indexOf(task.dayOfWeek);
+      let currentDayIndex = dayIndex;
+      
+      // Распределяем часы по дням с учётом 11-часового рабочего дня
+      while (remainingHours > 0 && currentDayIndex < daysOfWeek.length) {
+        const currentDay = daysOfWeek[currentDayIndex];
+        const currentLoad = loadData[task.machine][currentDay] || 0;
+        const availableHours = WORKING_HOURS_PER_DAY - currentLoad;
+        
+        if (availableHours > 0) {
+          const hoursToAdd = Math.min(remainingHours, availableHours);
+          loadData[task.machine][currentDay]! += hoursToAdd;
+          
+          // Добавляем задачу в список только если она начинается в этот день
+          if (currentDayIndex === dayIndex) {
+            tasksByMachineDay[task.machine][currentDay]!.push({
+              ...task,
+              displayHours: hoursToAdd
+            } as any);
+          }
+          
+          remainingHours -= hoursToAdd;
+        }
+        
+        currentDayIndex++;
       }
-      loadData[task.machine][task.dayOfWeek]! += hours;
-
-      if (!tasksByMachineDay[task.machine][task.dayOfWeek]) {
-        tasksByMachineDay[task.machine][task.dayOfWeek] = [];
-      }
-      tasksByMachineDay[task.machine][task.dayOfWeek]!.push(task);
     });
 
     return { loadData, tasksByMachineDay };
@@ -56,7 +80,7 @@ export const MachineLoadChart = ({ tasks, machines }: MachineLoadChartProps) => 
     ...Object.values(loadData).flatMap(machineData => 
       Object.values(machineData).filter(v => v !== undefined) as number[]
     ),
-    8
+    WORKING_HOURS_PER_DAY
   );
 
   return (
@@ -79,7 +103,7 @@ export const MachineLoadChart = ({ tasks, machines }: MachineLoadChartProps) => 
                 {daysOfWeek.map(day => {
                   const hours = loadData[machine][day] || 0;
                   const heightPercent = maxHours > 0 ? (hours / maxHours) * 100 : 0;
-                  const isOverloaded = hours > 8;
+                  const isOverloaded = hours > WORKING_HOURS_PER_DAY;
                   const dayTasks = tasksByMachineDay[machine][day] || [];
                   
                   return (
@@ -109,14 +133,21 @@ export const MachineLoadChart = ({ tasks, machines }: MachineLoadChartProps) => 
                           <TooltipContent side="top" className="max-w-xs">
                             <div className="space-y-1">
                               <p className="font-semibold text-sm mb-2">{day} - {machine}</p>
-                              {dayTasks.map((task, idx) => (
-                                <div key={idx} className="text-xs border-l-2 border-primary pl-2 py-1">
-                                  <p className="font-medium">{task.partName}</p>
-                                  <p className="text-muted-foreground">
-                                    {task.plannedQuantity} шт. × {task.timePerPart} мин = {((task.plannedQuantity * task.timePerPart) / 60).toFixed(1)}ч
-                                  </p>
-                                </div>
-                              ))}
+                              {dayTasks.map((task: any, idx: number) => {
+                                const totalHours = (task.plannedQuantity * task.timePerPart) / 60;
+                                const displayHours = task.displayHours || totalHours;
+                                return (
+                                  <div key={idx} className="text-xs border-l-2 border-primary pl-2 py-1">
+                                    <p className="font-medium">{task.partName}</p>
+                                    <p className="text-muted-foreground">
+                                      {task.plannedQuantity} шт. × {task.timePerPart} мин = {totalHours.toFixed(1)}ч
+                                      {displayHours < totalHours && (
+                                        <span className="text-orange-500"> (перенос на след. день)</span>
+                                      )}
+                                    </p>
+                                  </div>
+                                );
+                              })}
                             </div>
                           </TooltipContent>
                         )}
@@ -131,8 +162,8 @@ export const MachineLoadChart = ({ tasks, machines }: MachineLoadChartProps) => 
         </div>
         <div className="mt-6 flex items-center gap-4 text-xs text-muted-foreground border-t pt-4">
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 bg-muted border-2 border-dashed border-red-400" />
-            <span>Норма: 8 часов/смена</span>
+            <div className="w-3 h-3 bg-muted border-2 border-dashed border-green-400" />
+            <span>Норма: {WORKING_HOURS_PER_DAY} часов/день (12ч - 1ч обед)</span>
           </div>
           <div className="flex items-center gap-2">
             <Icon name="AlertTriangle" size={14} className="text-red-600" />
