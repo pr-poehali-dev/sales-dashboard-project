@@ -3,6 +3,7 @@ export type DayOfWeek = 'Пн' | 'Вт' | 'Ср' | 'Чт' | 'Пт' | 'Сб' | '�
 export interface ProductionTask {
   id: string;
   dayOfWeek: DayOfWeek;
+  scheduledDate?: string; // ISO date string for calendar planning
   partName: string;
   plannedQuantity: number;
   timePerPart: number;

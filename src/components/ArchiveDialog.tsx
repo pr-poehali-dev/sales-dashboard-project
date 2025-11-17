@@ -6,6 +6,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import Icon from "@/components/ui/icon";
 import { ProductionTask } from "@/types/production";
+import { format } from "date-fns";
+import { ru } from "date-fns/locale";
 
 interface ArchiveDialogProps {
   open: boolean;
@@ -91,7 +93,7 @@ export const ArchiveDialog = ({
                     <TableHead>Деталь</TableHead>
                     <TableHead>План</TableHead>
                     <TableHead>Факт</TableHead>
-                    <TableHead>День</TableHead>
+                    <TableHead>Дата</TableHead>
                     <TableHead>Станок</TableHead>
                     <TableHead>Оператор</TableHead>
                     <TableHead>Завершён</TableHead>
@@ -122,7 +124,14 @@ export const ArchiveDialog = ({
                           </Badge>
                         </TableCell>
                         <TableCell>
-                          <Badge variant="outline">{task.dayOfWeek}</Badge>
+                          {task.scheduledDate ? (
+                            <div className="flex flex-col">
+                              <span className="text-sm font-medium">{format(new Date(task.scheduledDate), 'd MMM yyyy', { locale: ru })}</span>
+                              <span className="text-xs text-muted-foreground">{task.dayOfWeek}</span>
+                            </div>
+                          ) : (
+                            <Badge variant="outline">{task.dayOfWeek}</Badge>
+                          )}
                         </TableCell>
                         <TableCell className="text-sm text-muted-foreground">
                           {task.machine}

@@ -3,9 +3,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
 import { ProductionTask, DayOfWeek } from "@/types/production";
 import Icon from "@/components/ui/icon";
+import { format } from "date-fns";
+import { ru } from "date-fns/locale";
 
 interface TaskDialogProps {
   open: boolean;
@@ -21,6 +24,7 @@ const daysOfWeek: DayOfWeek[] = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб',
 export const TaskDialog = ({ open, onOpenChange, task, onSave, machines, operators }: TaskDialogProps) => {
   const [formData, setFormData] = useState({
     dayOfWeek: 'Пн' as DayOfWeek,
+    scheduledDate: undefined as string | undefined,
     partName: '',
     plannedQuantity: 0,
     timePerPart: 0,
@@ -29,6 +33,7 @@ export const TaskDialog = ({ open, onOpenChange, task, onSave, machines, operato
     blueprint: '',
     actualQuantity: 0,
   });
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
 
   const [blueprintFile, setBlueprintFile] = useState<File | null>(null);
 
@@ -36,6 +41,7 @@ export const TaskDialog = ({ open, onOpenChange, task, onSave, machines, operato
     if (task) {
       setFormData({
         dayOfWeek: task.dayOfWeek,
+        scheduledDate: task.scheduledDate,
         partName: task.partName,
         plannedQuantity: task.plannedQuantity,
         timePerPart: task.timePerPart,
@@ -44,9 +50,13 @@ export const TaskDialog = ({ open, onOpenChange, task, onSave, machines, operato
         blueprint: task.blueprint || '',
         actualQuantity: task.actualQuantity,
       });
+      if (task.scheduledDate) {
+        setSelectedDate(new Date(task.scheduledDate));
+      }
     } else {
       setFormData({
         dayOfWeek: 'Пн',
+        scheduledDate: undefined,
         partName: '',
         plannedQuantity: 0,
         timePerPart: 0,
@@ -55,6 +65,7 @@ export const TaskDialog = ({ open, onOpenChange, task, onSave, machines, operato
         blueprint: '',
         actualQuantity: 0,
       });
+      setSelectedDate(undefined);
       setBlueprintFile(null);
     }
   }, [task, open, machines]);
@@ -86,17 +97,39 @@ export const TaskDialog = ({ open, onOpenChange, task, onSave, machines, operato
         
         <div className="grid grid-cols-2 gap-4 py-4">
           <div className="space-y-2">
-            <Label htmlFor="day">День недели</Label>
-            <Select value={formData.dayOfWeek} onValueChange={(value) => setFormData(prev => ({ ...prev, dayOfWeek: value as DayOfWeek }))}>
-              <SelectTrigger id="day">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {daysOfWeek.map(day => (
-                  <SelectItem key={day} value={day}>{day}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Label htmlFor="day">Дата планирования</Label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="w-full justify-start text-left font-normal"
+                  id="day"
+                >
+                  <Icon name="Calendar" size={16} className="mr-2" />
+                  {selectedDate ? format(selectedDate, 'PPP', { locale: ru }) : 'Выберите дату'}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={selectedDate}
+                  onSelect={(date) => {
+                    setSelectedDate(date);
+                    if (date) {
+                      const dayNames: DayOfWeek[] = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
+                      const dayOfWeek = dayNames[date.getDay()];
+                      setFormData(prev => ({
+                        ...prev,
+                        dayOfWeek,
+                        scheduledDate: date.toISOString()
+                      }));
+                    }
+                  }}
+                  disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
           </div>
 
           <div className="space-y-2">

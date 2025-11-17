@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Icon from "@/components/ui/icon";
 import { ProductionTask } from "@/types/production";
+import { format } from "date-fns";
+import { ru } from "date-fns/locale";
 
 interface ProductionTableProps {
   tasks: ProductionTask[];
@@ -64,7 +66,7 @@ export const ProductionTable = ({
       <Table>
         <TableHeader>
           <TableRow className="bg-muted/50">
-            <TableHead className="w-16">День</TableHead>
+            <TableHead className="w-32">Дата</TableHead>
             <TableHead>Деталь</TableHead>
             <TableHead className="w-24">План</TableHead>
             <TableHead className="w-28">Время/шт</TableHead>
@@ -92,7 +94,18 @@ export const ProductionTable = ({
               const completion = calculateCompletion(task);
               return (
                 <TableRow key={task.id} className="hover:bg-muted/30">
-                  <TableCell className="font-medium">{task.dayOfWeek}</TableCell>
+                  <TableCell className="font-medium">
+                    <div className="flex flex-col">
+                      {task.scheduledDate ? (
+                        <>
+                          <span className="text-sm">{format(new Date(task.scheduledDate), 'd MMM', { locale: ru })}</span>
+                          <span className="text-xs text-muted-foreground">{task.dayOfWeek}</span>
+                        </>
+                      ) : (
+                        <span>{task.dayOfWeek}</span>
+                      )}
+                    </div>
+                  </TableCell>
                   <TableCell className="font-semibold">{task.partName}</TableCell>
                   <TableCell>
                     <Input
