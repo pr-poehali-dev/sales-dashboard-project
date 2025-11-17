@@ -127,27 +127,36 @@ export const ProductionTable = ({
                   </TableCell>
                   <TableCell className="text-muted-foreground">{task.operator}</TableCell>
                   <TableCell>
-                    {(task.blueprints && task.blueprints.length > 0) || task.blueprint ? (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          const blueprints = task.blueprints || (task.blueprint ? [{ name: 'Чертёж.pdf', url: task.blueprint, type: 'application/pdf' }] : []);
-                          setViewingBlueprints({ partName: task.partName, blueprints });
-                        }}
-                        className="h-8 px-2 gap-1"
-                        title="Просмотр файлов"
-                      >
-                        <Icon name="FileText" size={16} className="text-blue-600" />
-                        {task.blueprints && task.blueprints.length > 1 && (
-                          <Badge variant="secondary" className="h-5 px-1.5 text-xs">
-                            {task.blueprints.length}
-                          </Badge>
-                        )}
-                      </Button>
-                    ) : (
-                      <span className="text-muted-foreground text-xs">—</span>
-                    )}
+                    {(() => {
+                      const hasBlueprints = task.blueprints && task.blueprints.length > 0;
+                      const hasLegacyBlueprint = task.blueprint && task.blueprint.trim() !== '';
+                      
+                      if (!hasBlueprints && !hasLegacyBlueprint) {
+                        return <span className="text-muted-foreground text-xs">—</span>;
+                      }
+                      
+                      return (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            const blueprints = hasBlueprints 
+                              ? task.blueprints 
+                              : [{ name: 'Чертёж.pdf', url: task.blueprint!, type: 'application/pdf' }];
+                            setViewingBlueprints({ partName: task.partName, blueprints: blueprints || [] });
+                          }}
+                          className="h-8 px-2 gap-1"
+                          title="Просмотр файлов"
+                        >
+                          <Icon name="FileText" size={16} className="text-blue-600" />
+                          {hasBlueprints && task.blueprints!.length > 1 && (
+                            <Badge variant="secondary" className="h-5 px-1.5 text-xs">
+                              {task.blueprints!.length}
+                            </Badge>
+                          )}
+                        </Button>
+                      );
+                    })()}
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-1">

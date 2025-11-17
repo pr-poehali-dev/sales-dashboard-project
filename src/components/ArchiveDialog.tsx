@@ -114,19 +114,28 @@ export const ArchiveDialog = ({
                         <TableCell className="font-medium">
                           <div className="flex items-center gap-2">
                             {task.partName}
-                            {((task.blueprints && task.blueprints.length > 0) || task.blueprint) && (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => {
-                                  const blueprints = task.blueprints || (task.blueprint ? [{ name: 'Чертёж.pdf', url: task.blueprint, type: 'application/pdf' }] : []);
-                                  setViewingBlueprints({ partName: task.partName, blueprints });
-                                }}
-                                className="h-6 w-6 p-0"
-                              >
-                                <Icon name="FileText" size={14} className="text-blue-600" />
-                              </Button>
-                            )}
+                            {(() => {
+                              const hasBlueprints = task.blueprints && task.blueprints.length > 0;
+                              const hasLegacyBlueprint = task.blueprint && task.blueprint.trim() !== '';
+                              
+                              if (!hasBlueprints && !hasLegacyBlueprint) return null;
+                              
+                              return (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => {
+                                    const blueprints = hasBlueprints 
+                                      ? task.blueprints 
+                                      : [{ name: 'Чертёж.pdf', url: task.blueprint!, type: 'application/pdf' }];
+                                    setViewingBlueprints({ partName: task.partName, blueprints: blueprints || [] });
+                                  }}
+                                  className="h-6 w-6 p-0"
+                                >
+                                  <Icon name="FileText" size={14} className="text-blue-600" />
+                                </Button>
+                              );
+                            })()}
                           </div>
                         </TableCell>
                         <TableCell>{task.plannedQuantity} шт</TableCell>
