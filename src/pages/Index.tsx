@@ -177,6 +177,12 @@ const Index = () => {
     setTasks(prev => prev.filter(t => t.id !== id));
   };
 
+  const handleUpdatePlanned = (id: string, plannedQuantity: number) => {
+    setTasks(prev => prev.map(t => 
+      t.id === id ? { ...t, plannedQuantity } : t
+    ));
+  };
+
   const handleUpdateActual = (id: string, actualQuantity: number) => {
     setTasks(prev => prev.map(t => t.id === id ? { ...t, actualQuantity } : t));
   };
@@ -303,6 +309,7 @@ const Index = () => {
           onEdit={handleEditTask}
           onDelete={handleDeleteTask}
           onUpdateActual={handleUpdateActual}
+          onUpdatePlanned={handleUpdatePlanned}
           onViewBlueprint={handleViewBlueprint}
           onArchive={handleArchiveTask}
           machines={settings.machines}

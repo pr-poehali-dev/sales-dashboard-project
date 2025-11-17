@@ -10,6 +10,7 @@ interface ProductionTableProps {
   onEdit: (task: ProductionTask) => void;
   onDelete: (id: string) => void;
   onUpdateActual: (id: string, actualQuantity: number) => void;
+  onUpdatePlanned: (id: string, plannedQuantity: number) => void;
   onViewBlueprint: (blueprint?: string) => void;
   onArchive: (id: string) => void;
   machines: string[];
@@ -20,6 +21,7 @@ export const ProductionTable = ({
   onEdit, 
   onDelete, 
   onUpdateActual,
+  onUpdatePlanned,
   onViewBlueprint,
   onArchive,
   machines
@@ -92,7 +94,15 @@ export const ProductionTable = ({
                 <TableRow key={task.id} className="hover:bg-muted/30">
                   <TableCell className="font-medium">{task.dayOfWeek}</TableCell>
                   <TableCell className="font-semibold">{task.partName}</TableCell>
-                  <TableCell>{task.plannedQuantity}</TableCell>
+                  <TableCell>
+                    <Input
+                      type="number"
+                      min="1"
+                      value={task.plannedQuantity}
+                      onChange={(e) => onUpdatePlanned(task.id, parseInt(e.target.value) || 1)}
+                      className="w-20 h-8 text-center font-medium"
+                    />
+                  </TableCell>
                   <TableCell>{task.timePerPart}м</TableCell>
                   <TableCell className="text-muted-foreground">{calculateTotalTime(task)}</TableCell>
                   <TableCell>
