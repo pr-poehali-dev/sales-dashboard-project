@@ -21,6 +21,29 @@ export const BlueprintsDialog = ({ open, onOpenChange, blueprints, partName }: B
     return 'text-blue-600';
   };
 
+  const handleOpenFile = (file: BlueprintFile) => {
+    if (!file.url) return;
+    
+    // Если это base64 строка, открываем напрямую
+    if (file.url.startsWith('data:')) {
+      const newWindow = window.open();
+      if (newWindow) {
+        if (file.type.includes('pdf')) {
+          newWindow.document.write(`<iframe src="${file.url}" width="100%" height="100%" style="border:none;"></iframe>`);
+        } else {
+          // Для других файлов создаём ссылку для скачивания
+          const link = document.createElement('a');
+          link.href = file.url;
+          link.download = file.name;
+          link.click();
+        }
+      }
+    } else {
+      // Если это обычная ссылка
+      window.open(file.url, '_blank');
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">
@@ -56,11 +79,7 @@ export const BlueprintsDialog = ({ open, onOpenChange, blueprints, partName }: B
                     </div>
                   </div>
                   <Button
-                    onClick={() => {
-                      if (file.url) {
-                        window.open(file.url, '_blank');
-                      }
-                    }}
+                    onClick={() => handleOpenFile(file)}
                     size="sm"
                     className="flex-shrink-0"
                   >
