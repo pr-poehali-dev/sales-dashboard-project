@@ -39,37 +39,57 @@ export const MachineLoadChart = ({ tasks, machines }: MachineLoadChartProps) => 
       });
     });
 
-    // Распределяем задачи с учётом рабочих часов
+    // Группируем задачи по станкам и дням
+    const tasksByMachine: { [machine: string]: { day: DayOfWeek; task: ProductionTask; hours: number }[] } = {};
+    
     tasks.forEach(task => {
+      if (!tasksByMachine[task.machine]) {
+        tasksByMachine[task.machine] = [];
+      }
       const totalMinutes = task.plannedQuantity * task.timePerPart;
-      let remainingHours = totalMinutes / 60;
+      const hours = totalMinutes / 60;
       
-      const dayIndex = daysOfWeek.indexOf(task.dayOfWeek);
-      let currentDayIndex = dayIndex;
+      tasksByMachine[task.machine].push({
+        day: task.dayOfWeek,
+        task,
+        hours
+      });
+    });
+
+    // Распределяем задачи каждого станка по дням с учётом лимита
+    Object.entries(tasksByMachine).forEach(([machine, machineTasks]) => {
+      // Сортируем по дням недели
+      machineTasks.sort((a, b) => daysOfWeek.indexOf(a.day) - daysOfWeek.indexOf(b.day));
       
-      // Распределяем часы по дням с учётом 11-часового рабочего дня
-      while (remainingHours > 0 && currentDayIndex < daysOfWeek.length) {
-        const currentDay = daysOfWeek[currentDayIndex];
-        const currentLoad = loadData[task.machine][currentDay] || 0;
-        const availableHours = WORKING_HOURS_PER_DAY - currentLoad;
+      machineTasks.forEach(({ day, task, hours }) => {
+        let remainingHours = hours;
+        let currentDayIndex = daysOfWeek.indexOf(day);
         
-        if (availableHours > 0) {
-          const hoursToAdd = Math.min(remainingHours, availableHours);
-          loadData[task.machine][currentDay]! += hoursToAdd;
+        // Распределяем часы начиная с указанного дня
+        while (remainingHours > 0 && currentDayIndex < daysOfWeek.length) {
+          const currentDay = daysOfWeek[currentDayIndex];
+          const currentLoad = loadData[machine][currentDay] || 0;
+          const availableHours = WORKING_HOURS_PER_DAY - currentLoad;
           
-          // Добавляем задачу в список только если она начинается в этот день
-          if (currentDayIndex === dayIndex) {
-            tasksByMachineDay[task.machine][currentDay]!.push({
-              ...task,
-              displayHours: hoursToAdd
-            } as any);
+          if (availableHours > 0) {
+            const hoursToAdd = Math.min(remainingHours, availableHours);
+            loadData[machine][currentDay]! += hoursToAdd;
+            
+            // Добавляем задачу в отображение только для первого дня
+            if (currentDayIndex === daysOfWeek.indexOf(day)) {
+              tasksByMachineDay[machine][currentDay]!.push({
+                ...task,
+                displayHours: hoursToAdd,
+                spillsOver: hoursToAdd < hours
+              } as any);
+            }
+            
+            remainingHours -= hoursToAdd;
           }
           
-          remainingHours -= hoursToAdd;
+          currentDayIndex++;
         }
-        
-        currentDayIndex++;
-      }
+      });
     });
 
     return { loadData, tasksByMachineDay };
@@ -136,13 +156,14 @@ export const MachineLoadChart = ({ tasks, machines }: MachineLoadChartProps) => 
                               {dayTasks.map((task: any, idx: number) => {
                                 const totalHours = (task.plannedQuantity * task.timePerPart) / 60;
                                 const displayHours = task.displayHours || totalHours;
+                                const spillsOver = task.spillsOver || false;
                                 return (
                                   <div key={idx} className="text-xs border-l-2 border-primary pl-2 py-1">
                                     <p className="font-medium">{task.partName}</p>
                                     <p className="text-muted-foreground">
                                       {task.plannedQuantity} шт. × {task.timePerPart} мин = {totalHours.toFixed(1)}ч
-                                      {displayHours < totalHours && (
-                                        <span className="text-orange-500"> (перенос на след. день)</span>
+                                      {spillsOver && (
+                                        <span className="text-orange-500"> (продолжение на след. дни)</span>
                                       )}
                                     </p>
                                   </div>
