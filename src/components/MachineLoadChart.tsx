@@ -58,6 +58,16 @@ export const MachineLoadChart = ({ tasks, machines }: MachineLoadChartProps) => 
 
     // Распределяем задачи каждого станка по дням с учётом лимита
     Object.entries(tasksByMachine).forEach(([machine, machineTasks]) => {
+      // Пропускаем станки, которых нет в текущем списке
+      if (!loadData[machine]) {
+        loadData[machine] = {};
+        tasksByMachineDay[machine] = {};
+        daysOfWeek.forEach(day => {
+          loadData[machine][day] = 0;
+          tasksByMachineDay[machine][day] = [];
+        });
+      }
+      
       // Сортируем по дням недели
       machineTasks.sort((a, b) => daysOfWeek.indexOf(a.day) - daysOfWeek.indexOf(b.day));
       
@@ -73,10 +83,13 @@ export const MachineLoadChart = ({ tasks, machines }: MachineLoadChartProps) => 
           
           if (availableHours > 0) {
             const hoursToAdd = Math.min(remainingHours, availableHours);
-            loadData[machine][currentDay]! += hoursToAdd;
+            loadData[machine][currentDay] = (loadData[machine][currentDay] || 0) + hoursToAdd;
             
             // Добавляем задачу в отображение только для первого дня
             if (currentDayIndex === daysOfWeek.indexOf(day)) {
+              if (!tasksByMachineDay[machine][currentDay]) {
+                tasksByMachineDay[machine][currentDay] = [];
+              }
               tasksByMachineDay[machine][currentDay]!.push({
                 ...task,
                 displayHours: hoursToAdd,

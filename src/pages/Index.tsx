@@ -195,6 +195,28 @@ const Index = () => {
   };
 
   const handleSaveSettings = (newSettings: Settings) => {
+    // Обновляем задачи, если станки или операторы были изменены
+    const oldMachines = settings.machines;
+    const newMachines = newSettings.machines;
+    const oldOperators = settings.operators;
+    const newOperators = newSettings.operators;
+    
+    setTasks(prev => prev.map(task => {
+      const updatedTask = { ...task };
+      
+      // Если станок задачи больше не существует, назначаем первый доступный
+      if (!newMachines.includes(task.machine)) {
+        updatedTask.machine = newMachines[0] || task.machine;
+      }
+      
+      // Если оператор задачи больше не существует, назначаем первого доступного
+      if (!newOperators.includes(task.operator)) {
+        updatedTask.operator = newOperators[0] || task.operator;
+      }
+      
+      return updatedTask;
+    }));
+    
     setSettings(newSettings);
   };
 

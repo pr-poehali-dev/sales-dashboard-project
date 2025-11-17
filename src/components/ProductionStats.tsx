@@ -15,18 +15,18 @@ export const ProductionStats = ({ tasks }: ProductionStatsProps) => {
     
     const completionRate = totalPlanned > 0 ? Math.round((totalActual / totalPlanned) * 100) : 0;
     
-    const machineUtilization = {
-      'Станок №1': 0,
-      'Станок №2': 0,
-      'Станок №3': 0,
-    };
+    const machineUtilization: { [key: string]: number } = {};
     
     tasks.forEach(task => {
       const hours = (task.plannedQuantity * task.timePerPart) / 60;
+      if (!machineUtilization[task.machine]) {
+        machineUtilization[task.machine] = 0;
+      }
       machineUtilization[task.machine] += hours;
     });
 
-    const avgUtilization = Object.values(machineUtilization).reduce((sum, hours) => sum + hours, 0) / 3;
+    const machineCount = Object.keys(machineUtilization).length || 1;
+    const avgUtilization = Object.values(machineUtilization).reduce((sum, hours) => sum + hours, 0) / machineCount;
     const utilizationPercent = Math.round((avgUtilization / 40) * 100);
 
     return {
