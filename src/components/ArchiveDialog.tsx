@@ -8,6 +8,7 @@ import Icon from "@/components/ui/icon";
 import { ProductionTask } from "@/types/production";
 import { format } from "date-fns";
 import { ru } from "date-fns/locale";
+import { BlueprintsDialog } from "@/components/BlueprintsDialog";
 
 interface ArchiveDialogProps {
   open: boolean;
@@ -26,6 +27,7 @@ export const ArchiveDialog = ({
 }: ArchiveDialogProps) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredTasks, setFilteredTasks] = useState<ProductionTask[]>(archivedTasks);
+  const [viewingBlueprints, setViewingBlueprints] = useState<{ partName: string; blueprints: any[] } | null>(null);
 
   useEffect(() => {
     if (searchQuery) {
@@ -112,8 +114,18 @@ export const ArchiveDialog = ({
                         <TableCell className="font-medium">
                           <div className="flex items-center gap-2">
                             {task.partName}
-                            {task.blueprint && (
-                              <Icon name="FileText" size={16} className="text-muted-foreground" />
+                            {((task.blueprints && task.blueprints.length > 0) || task.blueprint) && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                  const blueprints = task.blueprints || (task.blueprint ? [{ name: 'Чертёж.pdf', url: task.blueprint, type: 'application/pdf' }] : []);
+                                  setViewingBlueprints({ partName: task.partName, blueprints });
+                                }}
+                                className="h-6 w-6 p-0"
+                              >
+                                <Icon name="FileText" size={14} className="text-blue-600" />
+                              </Button>
                             )}
                           </div>
                         </TableCell>
@@ -175,6 +187,13 @@ export const ArchiveDialog = ({
           )}
         </div>
       </DialogContent>
+      
+      <BlueprintsDialog
+        open={!!viewingBlueprints}
+        onOpenChange={(open) => !open && setViewingBlueprints(null)}
+        blueprints={viewingBlueprints?.blueprints || []}
+        partName={viewingBlueprints?.partName || ''}
+      />
     </Dialog>
   );
 };

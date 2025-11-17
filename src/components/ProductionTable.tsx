@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -6,6 +7,7 @@ import Icon from "@/components/ui/icon";
 import { ProductionTask } from "@/types/production";
 import { format } from "date-fns";
 import { ru } from "date-fns/locale";
+import { BlueprintsDialog } from "@/components/BlueprintsDialog";
 
 interface ProductionTableProps {
   tasks: ProductionTask[];
@@ -18,6 +20,11 @@ interface ProductionTableProps {
   machines: string[];
 }
 
+interface ViewingTask {
+  partName: string;
+  blueprints: any[];
+}
+
 export const ProductionTable = ({ 
   tasks, 
   onEdit, 
@@ -28,6 +35,7 @@ export const ProductionTable = ({
   onArchive,
   machines
 }: ProductionTableProps) => {
+  const [viewingBlueprints, setViewingBlueprints] = useState<ViewingTask | null>(null);
   const calculateCompletion = (task: ProductionTask) => {
     if (task.plannedQuantity === 0) return 0;
     return Math.round((task.actualQuantity / task.plannedQuantity) * 100);
@@ -119,14 +127,23 @@ export const ProductionTable = ({
                   </TableCell>
                   <TableCell className="text-muted-foreground">{task.operator}</TableCell>
                   <TableCell>
-                    {task.blueprint ? (
+                    {(task.blueprints && task.blueprints.length > 0) || task.blueprint ? (
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => onViewBlueprint(task.blueprint)}
-                        className="h-8 w-8 p-0"
+                        onClick={() => {
+                          const blueprints = task.blueprints || (task.blueprint ? [{ name: 'Чертёж.pdf', url: task.blueprint, type: 'application/pdf' }] : []);
+                          setViewingBlueprints({ partName: task.partName, blueprints });
+                        }}
+                        className="h-8 px-2 gap-1"
+                        title="Просмотр файлов"
                       >
-                        <Icon name="FileText" size={18} className="text-blue-600" />
+                        <Icon name="FileText" size={16} className="text-blue-600" />
+                        {task.blueprints && task.blueprints.length > 1 && (
+                          <Badge variant="secondary" className="h-5 px-1.5 text-xs">
+                            {task.blueprints.length}
+                          </Badge>
+                        )}
                       </Button>
                     ) : (
                       <span className="text-muted-foreground text-xs">—</span>
@@ -204,6 +221,13 @@ export const ProductionTable = ({
           )}
         </TableBody>
       </Table>
+      
+      <BlueprintsDialog
+        open={!!viewingBlueprints}
+        onOpenChange={(open) => !open && setViewingBlueprints(null)}
+        blueprints={viewingBlueprints?.blueprints || []}
+        partName={viewingBlueprints?.partName || ''}
+      />
     </div>
   );
 };

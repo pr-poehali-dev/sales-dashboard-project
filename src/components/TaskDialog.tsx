@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { ProductionTask, DayOfWeek } from "@/types/production";
+import { ProductionTask, DayOfWeek, BlueprintFile } from "@/types/production";
 import Icon from "@/components/ui/icon";
 import { format } from "date-fns";
 import { ru } from "date-fns/locale";
@@ -32,14 +32,15 @@ export const TaskDialog = ({ open, onOpenChange, task, onSave, machines, operato
     machine: machines[0] || '',
     operator: '',
     blueprint: '',
+    blueprints: [] as BlueprintFile[],
     actualQuantity: 0,
   });
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
-
-  const [blueprintFile, setBlueprintFile] = useState<File | null>(null);
+  const [blueprintFiles, setBlueprintFiles] = useState<BlueprintFile[]>([]);
 
   useEffect(() => {
     if (task) {
+      const existingBlueprints = task.blueprints || (task.blueprint ? [{ name: 'Чертёж.pdf', url: task.blueprint, type: 'application/pdf' }] : []);
       setFormData({
         dayOfWeek: task.dayOfWeek,
         scheduledDate: task.scheduledDate,
@@ -49,8 +50,10 @@ export const TaskDialog = ({ open, onOpenChange, task, onSave, machines, operato
         machine: task.machine,
         operator: task.operator,
         blueprint: task.blueprint || '',
+        blueprints: existingBlueprints,
         actualQuantity: task.actualQuantity,
       });
+      setBlueprintFiles(existingBlueprints);
       if (task.scheduledDate) {
         setSelectedDate(new Date(task.scheduledDate));
       }
@@ -64,20 +67,44 @@ export const TaskDialog = ({ open, onOpenChange, task, onSave, machines, operato
         machine: machines[0] || '',
         operator: '',
         blueprint: '',
+        blueprints: [],
         actualQuantity: 0,
       });
       setSelectedDate(undefined);
-      setBlueprintFile(null);
+      setBlueprintFiles([]);
     }
   }, [task, open, machines]);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file && file.type === 'application/pdf') {
-      setBlueprintFile(file);
-      const url = URL.createObjectURL(file);
-      setFormData(prev => ({ ...prev, blueprint: url }));
+  const handleFilesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files) {
+      const newFiles: BlueprintFile[] = [];
+      Array.from(files).forEach(file => {
+        const url = URL.createObjectURL(file);
+        newFiles.push({
+          name: file.name,
+          url: url,
+          type: file.type
+        });
+      });
+      const updatedFiles = [...blueprintFiles, ...newFiles];
+      setBlueprintFiles(updatedFiles);
+      setFormData(prev => ({ 
+        ...prev, 
+        blueprints: updatedFiles,
+        blueprint: updatedFiles[0]?.url || '' // Для обратной совместимости
+      }));
     }
+  };
+
+  const handleRemoveFile = (index: number) => {
+    const updatedFiles = blueprintFiles.filter((_, i) => i !== index);
+    setBlueprintFiles(updatedFiles);
+    setFormData(prev => ({ 
+      ...prev, 
+      blueprints: updatedFiles,
+      blueprint: updatedFiles[0]?.url || ''
+    }));
   };
 
   const handleSubmit = () => {
@@ -196,32 +223,55 @@ export const TaskDialog = ({ open, onOpenChange, task, onSave, machines, operato
           </div>
 
           <div className="col-span-2 space-y-2">
-            <Label htmlFor="blueprint">Чертёж (PDF)</Label>
-            <div className="flex gap-2">
-              <Input
-                id="blueprint"
-                type="file"
-                accept=".pdf"
-                onChange={handleFileChange}
-                className="cursor-pointer"
-              />
-              {formData.blueprint && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => window.open(formData.blueprint, '_blank')}
-                >
-                  <Icon name="Eye" size={16} className="mr-1" />
-                  Просмотр
-                </Button>
-              )}
-            </div>
-            {blueprintFile && (
-              <p className="text-xs text-muted-foreground flex items-center gap-1">
-                <Icon name="FileCheck" size={14} />
-                {blueprintFile.name}
-              </p>
+            <Label htmlFor="blueprint">Файлы чертежей и моделей</Label>
+            <Input
+              id="blueprint"
+              type="file"
+              accept=".pdf,.ipt,.step,.stp"
+              multiple
+              onChange={handleFilesChange}
+              className="cursor-pointer"
+            />
+            <p className="text-xs text-muted-foreground">
+              Поддерживаемые форматы: PDF, IPT, STEP
+            </p>
+            
+            {blueprintFiles.length > 0 && (
+              <div className="space-y-2 mt-3">
+                <Label className="text-sm">Прикреплённые файлы ({blueprintFiles.length})</Label>
+                <div className="space-y-2 max-h-40 overflow-y-auto">
+                  {blueprintFiles.map((file, index) => (
+                    <div key={index} className="flex items-center justify-between gap-2 p-2 bg-muted rounded-lg">
+                      <div className="flex items-center gap-2 flex-1 min-w-0">
+                        <Icon name="FileText" size={16} className="text-blue-600 flex-shrink-0" />
+                        <span className="text-sm truncate">{file.name}</span>
+                      </div>
+                      <div className="flex gap-1">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => window.open(file.url, '_blank')}
+                          className="h-8 w-8 p-0"
+                          title="Открыть"
+                        >
+                          <Icon name="Eye" size={14} />
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleRemoveFile(index)}
+                          className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+                          title="Удалить"
+                        >
+                          <Icon name="X" size={14} />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
             )}
           </div>
 

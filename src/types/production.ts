@@ -1,5 +1,11 @@
 export type DayOfWeek = 'Пн' | 'Вт' | 'Ср' | 'Чт' | 'Пт' | 'Сб' | 'Вс';
 
+export interface BlueprintFile {
+  name: string;
+  url: string;
+  type: string;
+}
+
 export interface ProductionTask {
   id: string;
   dayOfWeek: DayOfWeek;
@@ -9,7 +15,8 @@ export interface ProductionTask {
   timePerPart: number;
   machine: string;
   operator: string;
-  blueprint?: string;
+  blueprint?: string; // Deprecated: старый формат для совместимости
+  blueprints?: BlueprintFile[]; // Новый формат: массив файлов
   actualQuantity: number;
   archived?: boolean;
   archivedAt?: string;
