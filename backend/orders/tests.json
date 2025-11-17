@@ -1,0 +1,34 @@
+{
+  "tests": [
+    {
+      "name": "Get all orders",
+      "method": "GET",
+      "expectedStatus": 200,
+      "expectedBody": {
+        "orders": "array",
+        "pagination": {
+          "page": 1,
+          "limit": 20
+        }
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Create new order",
+      "method": "POST",
+      "body": {
+        "clientName": "Test Client",
+        "description": "Test order description",
+        "priority": "MEDIUM",
+        "deadline": "2024-12-31T12:00:00Z"
+      },
+      "expectedStatus": 201,
+      "expectedBody": {
+        "order_number": "string",
+        "client_name": "Test Client",
+        "priority": "MEDIUM"
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}

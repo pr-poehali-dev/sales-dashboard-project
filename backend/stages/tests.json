@@ -1,0 +1,31 @@
+{
+  "tests": [
+    {
+      "name": "Get stages for order",
+      "method": "GET",
+      "queryStringParameters": {
+        "orderId": "1"
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "stages": "array"
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Create new stage",
+      "method": "POST",
+      "body": {
+        "orderId": 1,
+        "name": "Фрезеровка",
+        "assignedTo": 1
+      },
+      "expectedStatus": 201,
+      "expectedBody": {
+        "name": "Фрезеровка",
+        "order_id": 1
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}

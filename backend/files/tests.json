@@ -1,0 +1,16 @@
+{
+  "tests": [
+    {
+      "name": "Get files for order",
+      "method": "GET",
+      "queryStringParameters": {
+        "orderId": "1"
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "files": "array"
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "name": "auth-function",
+  "version": "1.0.0",
+  "main": "index.ts",
+  "dependencies": {
+    "pg": "^8.11.3",
+    "jsonwebtoken": "^9.0.2",
+    "bcryptjs": "^2.4.3",
+    "@types/pg": "^8.10.9",
+    "@types/jsonwebtoken": "^9.0.5",
+    "@types/bcryptjs": "^2.4.6"
+  }
+}

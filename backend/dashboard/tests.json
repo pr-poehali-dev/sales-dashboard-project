@@ -1,0 +1,16 @@
+{
+  "tests": [
+    {
+      "name": "Get dashboard statistics",
+      "method": "GET",
+      "expectedStatus": 200,
+      "expectedBody": {
+        "totalOrders": "number",
+        "activeOrders": "number",
+        "completedOrders": "number",
+        "overdueOrders": "number"
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}
