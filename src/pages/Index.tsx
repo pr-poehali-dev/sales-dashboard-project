@@ -226,13 +226,6 @@ const Index = () => {
           </div>
         </header>
 
-        <ProductionStats tasks={activeTasks} />
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <MachineLoadChart tasks={activeTasks} machines={settings.machines} />
-          <CompletionChart tasks={activeTasks} />
-        </div>
-
         <div className="flex flex-wrap gap-4 items-center bg-card p-4 rounded-lg border">
           <div className="flex items-center gap-2">
             <Icon name="Filter" size={18} className="text-muted-foreground" />
@@ -314,6 +307,13 @@ const Index = () => {
           onArchive={handleArchiveTask}
           machines={settings.machines}
         />
+
+        <ProductionStats tasks={activeTasks} />
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <MachineLoadChart tasks={activeTasks} machines={settings.machines} />
+          <CompletionChart tasks={activeTasks} />
+        </div>
 
         <TaskDialog
           open={dialogOpen}
