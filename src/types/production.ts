@@ -10,6 +10,9 @@ export interface ProductionTask {
   operator: string;
   blueprint?: string;
   actualQuantity: number;
+  archived?: boolean;
+  archivedAt?: string;
+  completedAt?: string;
 }
 
 export interface MachineLoad {

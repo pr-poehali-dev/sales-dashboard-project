@@ -11,6 +11,7 @@ interface ProductionTableProps {
   onDelete: (id: string) => void;
   onUpdateActual: (id: string, actualQuantity: number) => void;
   onViewBlueprint: (blueprint?: string) => void;
+  onArchive: (id: string) => void;
   machines: string[];
 }
 
@@ -20,6 +21,7 @@ export const ProductionTable = ({
   onDelete, 
   onUpdateActual,
   onViewBlueprint,
+  onArchive,
   machines
 }: ProductionTableProps) => {
   const calculateCompletion = (task: ProductionTask) => {
@@ -134,17 +136,31 @@ export const ProductionTable = ({
                         size="sm"
                         onClick={() => onEdit(task)}
                         className="h-8 w-8 p-0"
+                        title="Редактировать"
                       >
                         <Icon name="Edit" size={16} />
                       </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => onDelete(task.id)}
-                        className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
-                      >
-                        <Icon name="Trash2" size={16} />
-                      </Button>
+                      {completion >= 100 ? (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => onArchive(task.id)}
+                          className="h-8 w-8 p-0 text-green-600 hover:text-green-700 hover:bg-green-50"
+                          title="Переместить в архив"
+                        >
+                          <Icon name="Archive" size={16} />
+                        </Button>
+                      ) : (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => onDelete(task.id)}
+                          className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+                          title="Удалить"
+                        >
+                          <Icon name="Trash2" size={16} />
+                        </Button>
+                      )}
                     </div>
                   </TableCell>
                 </TableRow>

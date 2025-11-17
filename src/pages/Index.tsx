@@ -10,6 +10,7 @@ import { MachineLoadChart } from "@/components/MachineLoadChart";
 import { CompletionChart } from "@/components/CompletionChart";
 import { ProductionStats } from "@/components/ProductionStats";
 import { SettingsDialog } from "@/components/SettingsDialog";
+import { ArchiveDialog } from "@/components/ArchiveDialog";
 
 const mockTasks: ProductionTask[] = [
   {
@@ -69,6 +70,7 @@ const Index = () => {
   const [filteredTasks, setFilteredTasks] = useState<ProductionTask[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [archiveOpen, setArchiveOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<ProductionTask | undefined>();
   const [blueprintViewerOpen, setBlueprintViewerOpen] = useState(false);
   const [currentBlueprint, setCurrentBlueprint] = useState<string | undefined>();
@@ -108,7 +110,7 @@ const Index = () => {
   }, [settings]);
 
   useEffect(() => {
-    let filtered = tasks;
+    let filtered = tasks.filter(task => !task.archived);
     
     if (filterDay !== 'Все') {
       filtered = filtered.filter(task => task.dayOfWeek === filterDay);
@@ -153,6 +155,28 @@ const Index = () => {
     }
   };
 
+  const handleArchiveTask = (id: string) => {
+    if (confirm('Переместить выполненную деталь в архив?')) {
+      setTasks(prev => prev.map(t => 
+        t.id === id 
+          ? { ...t, archived: true, archivedAt: new Date().toISOString(), completedAt: new Date().toISOString() }
+          : t
+      ));
+    }
+  };
+
+  const handleRestoreTask = (id: string) => {
+    setTasks(prev => prev.map(t => 
+      t.id === id 
+        ? { ...t, archived: false, archivedAt: undefined, completedAt: undefined }
+        : t
+    ));
+  };
+
+  const handleDeleteFromArchive = (id: string) => {
+    setTasks(prev => prev.filter(t => t.id !== id));
+  };
+
   const handleUpdateActual = (id: string, actualQuantity: number) => {
     setTasks(prev => prev.map(t => t.id === id ? { ...t, actualQuantity } : t));
   };
@@ -169,6 +193,8 @@ const Index = () => {
   };
 
   const uniqueOperators = Array.from(new Set(tasks.map(t => t.operator)));
+  const archivedTasks = tasks.filter(task => task.archived);
+  const activeTasks = tasks.filter(task => !task.archived);
 
   return (
     <div className="min-h-screen bg-background p-6">
@@ -179,6 +205,10 @@ const Index = () => {
             <p className="text-muted-foreground mt-1">Участок металлообработки - планирование и учёт</p>
           </div>
           <div className="flex gap-2">
+            <Button onClick={() => setArchiveOpen(true)} variant="outline" size="lg">
+              <Icon name="Archive" size={18} className="mr-2" />
+              Архив ({archivedTasks.length})
+            </Button>
             <Button onClick={() => setSettingsOpen(true)} variant="outline" size="lg">
               <Icon name="Settings" size={18} className="mr-2" />
               Настройки
@@ -190,11 +220,11 @@ const Index = () => {
           </div>
         </header>
 
-        <ProductionStats tasks={tasks} />
+        <ProductionStats tasks={activeTasks} />
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <MachineLoadChart tasks={tasks} machines={settings.machines} />
-          <CompletionChart tasks={tasks} />
+          <MachineLoadChart tasks={activeTasks} machines={settings.machines} />
+          <CompletionChart tasks={activeTasks} />
         </div>
 
         <div className="flex flex-wrap gap-4 items-center bg-card p-4 rounded-lg border">
@@ -274,6 +304,7 @@ const Index = () => {
           onDelete={handleDeleteTask}
           onUpdateActual={handleUpdateActual}
           onViewBlueprint={handleViewBlueprint}
+          onArchive={handleArchiveTask}
           machines={settings.machines}
         />
 
@@ -297,6 +328,14 @@ const Index = () => {
           open={blueprintViewerOpen}
           onOpenChange={setBlueprintViewerOpen}
           blueprintUrl={currentBlueprint}
+        />
+
+        <ArchiveDialog
+          open={archiveOpen}
+          onOpenChange={setArchiveOpen}
+          archivedTasks={archivedTasks}
+          onRestore={handleRestoreTask}
+          onDelete={handleDeleteFromArchive}
         />
       </div>
     </div>
