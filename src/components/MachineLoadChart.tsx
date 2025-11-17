@@ -132,15 +132,10 @@ export const MachineLoadChart = ({ tasks, machines }: MachineLoadChartProps) => 
                         <TooltipTrigger asChild>
                           <div className="w-full h-32 bg-muted rounded-lg flex flex-col justify-end p-1 relative cursor-pointer">
                             {hours > 0 && (
-                              <>
-                                <div 
-                                  className={`${getMachineColor(index)} ${isOverloaded ? 'opacity-100 animate-pulse' : 'opacity-80'} rounded transition-all`}
-                                  style={{ height: `${Math.min(heightPercent, 100)}%` }}
-                                />
-                                <span className="absolute top-1 left-0 right-0 text-center text-xs font-semibold text-foreground">
-                                  {hours.toFixed(1)}ч
-                                </span>
-                              </>
+                              <div 
+                                className={`${getMachineColor(index)} ${isOverloaded ? 'opacity-100 animate-pulse' : 'opacity-80'} rounded transition-all`}
+                                style={{ height: `${Math.min(heightPercent, 100)}%` }}
+                              />
                             )}
                             {isOverloaded && (
                               <div className="absolute bottom-1 left-0 right-0 flex justify-center">
