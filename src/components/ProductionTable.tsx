@@ -108,31 +108,7 @@ export const ProductionTable = ({
                   </TableCell>
                   <TableCell className="font-semibold">{task.partName}</TableCell>
                   <TableCell>
-                    <div className="flex items-center gap-1">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => onUpdatePlanned(task.id, Math.max(1, task.plannedQuantity - 1))}
-                        className="h-8 w-8 p-0 text-lg font-bold"
-                      >
-                        −
-                      </Button>
-                      <Input
-                        type="number"
-                        min="1"
-                        value={task.plannedQuantity}
-                        onChange={(e) => onUpdatePlanned(task.id, parseInt(e.target.value) || 1)}
-                        className="w-16 h-8 text-center font-medium [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                      />
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => onUpdatePlanned(task.id, task.plannedQuantity + 1)}
-                        className="h-8 w-8 p-0 text-lg font-bold"
-                      >
-                        +
-                      </Button>
-                    </div>
+                    <span className="font-medium">{task.plannedQuantity}</span>
                   </TableCell>
                   <TableCell>{task.timePerPart}м</TableCell>
                   <TableCell className="text-muted-foreground">{calculateTotalTime(task)}</TableCell>
