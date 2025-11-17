@@ -183,10 +183,6 @@ export const MachineLoadChart = ({ tasks, machines }: MachineLoadChartProps) => 
         </div>
         <div className="mt-6 flex items-center gap-4 text-xs text-muted-foreground border-t pt-4">
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 bg-muted border-2 border-dashed border-green-400" />
-            <span>Норма: {WORKING_HOURS_PER_DAY} часов/день (12ч - 1ч обед)</span>
-          </div>
-          <div className="flex items-center gap-2">
             <Icon name="AlertTriangle" size={14} className="text-red-600" />
             <span>Перегрузка станка</span>
           </div>
