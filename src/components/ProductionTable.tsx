@@ -108,13 +108,31 @@ export const ProductionTable = ({
                   </TableCell>
                   <TableCell className="font-semibold">{task.partName}</TableCell>
                   <TableCell>
-                    <Input
-                      type="number"
-                      min="1"
-                      value={task.plannedQuantity}
-                      onChange={(e) => onUpdatePlanned(task.id, parseInt(e.target.value) || 1)}
-                      className="w-20 h-8 text-center font-medium"
-                    />
+                    <div className="flex items-center gap-1">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => onUpdatePlanned(task.id, Math.max(1, task.plannedQuantity - 1))}
+                        className="h-8 w-8 p-0 text-lg font-bold"
+                      >
+                        −
+                      </Button>
+                      <Input
+                        type="number"
+                        min="1"
+                        value={task.plannedQuantity}
+                        onChange={(e) => onUpdatePlanned(task.id, parseInt(e.target.value) || 1)}
+                        className="w-16 h-8 text-center font-medium [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      />
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => onUpdatePlanned(task.id, task.plannedQuantity + 1)}
+                        className="h-8 w-8 p-0 text-lg font-bold"
+                      >
+                        +
+                      </Button>
+                    </div>
                   </TableCell>
                   <TableCell>{task.timePerPart}м</TableCell>
                   <TableCell className="text-muted-foreground">{calculateTotalTime(task)}</TableCell>
@@ -139,13 +157,31 @@ export const ProductionTable = ({
                     )}
                   </TableCell>
                   <TableCell>
-                    <Input
-                      type="number"
-                      min="0"
-                      value={task.actualQuantity}
-                      onChange={(e) => onUpdateActual(task.id, parseInt(e.target.value) || 0)}
-                      className="w-20 h-8 text-center"
-                    />
+                    <div className="flex items-center gap-1">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => onUpdateActual(task.id, Math.max(0, task.actualQuantity - 1))}
+                        className="h-8 w-8 p-0 text-lg font-bold"
+                      >
+                        −
+                      </Button>
+                      <Input
+                        type="number"
+                        min="0"
+                        value={task.actualQuantity}
+                        onChange={(e) => onUpdateActual(task.id, parseInt(e.target.value) || 0)}
+                        className="w-16 h-8 text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      />
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => onUpdateActual(task.id, task.actualQuantity + 1)}
+                        className="h-8 w-8 p-0 text-lg font-bold"
+                      >
+                        +
+                      </Button>
+                    </div>
                   </TableCell>
                   <TableCell>
                     <Badge variant="outline" className={getCompletionColor(completion)}>
