@@ -75,26 +75,37 @@ export const TaskDialog = ({ open, onOpenChange, task, onSave, machines, operato
     }
   }, [task, open, machines]);
 
-  const handleFilesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFilesChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (files) {
       const newFiles: BlueprintFile[] = [];
-      Array.from(files).forEach(file => {
-        const url = URL.createObjectURL(file);
+      
+      for (const file of Array.from(files)) {
+        const base64 = await fileToBase64(file);
         newFiles.push({
           name: file.name,
-          url: url,
+          url: base64,
           type: file.type
         });
-      });
+      }
+      
       const updatedFiles = [...blueprintFiles, ...newFiles];
       setBlueprintFiles(updatedFiles);
       setFormData(prev => ({ 
         ...prev, 
         blueprints: updatedFiles,
-        blueprint: updatedFiles[0]?.url || '' // Для обратной совместимости
+        blueprint: updatedFiles[0]?.url || ''
       }));
     }
+  };
+
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = error => reject(error);
+    });
   };
 
   const handleRemoveFile = (index: number) => {
