@@ -1,4 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { ProductionTask, DayOfWeek } from "@/types/production";
 import Icon from "@/components/ui/icon";
 
@@ -25,9 +26,11 @@ const getMachineColor = (index: number) => colorClasses[index % colorClasses.len
 export const MachineLoadChart = ({ tasks, machines }: MachineLoadChartProps) => {
   const calculateLoad = () => {
     const loadData: { [key: string]: { [key in DayOfWeek]?: number } } = {};
+    const tasksByMachineDay: { [key: string]: { [key in DayOfWeek]?: ProductionTask[] } } = {};
     
     machines.forEach(machine => {
       loadData[machine] = {};
+      tasksByMachineDay[machine] = {};
     });
 
     tasks.forEach(task => {
@@ -38,12 +41,17 @@ export const MachineLoadChart = ({ tasks, machines }: MachineLoadChartProps) => 
         loadData[task.machine][task.dayOfWeek] = 0;
       }
       loadData[task.machine][task.dayOfWeek]! += hours;
+
+      if (!tasksByMachineDay[task.machine][task.dayOfWeek]) {
+        tasksByMachineDay[task.machine][task.dayOfWeek] = [];
+      }
+      tasksByMachineDay[task.machine][task.dayOfWeek]!.push(task);
     });
 
-    return loadData;
+    return { loadData, tasksByMachineDay };
   };
 
-  const loadData = calculateLoad();
+  const { loadData, tasksByMachineDay } = calculateLoad();
   const maxHours = Math.max(
     ...Object.values(loadData).flatMap(machineData => 
       Object.values(machineData).filter(v => v !== undefined) as number[]
@@ -72,27 +80,47 @@ export const MachineLoadChart = ({ tasks, machines }: MachineLoadChartProps) => 
                   const hours = loadData[machine][day] || 0;
                   const heightPercent = maxHours > 0 ? (hours / maxHours) * 100 : 0;
                   const isOverloaded = hours > 8;
+                  const dayTasks = tasksByMachineDay[machine][day] || [];
                   
                   return (
                     <div key={day} className="flex flex-col items-center gap-1">
-                      <div className="w-full h-32 bg-muted rounded-lg flex flex-col justify-end p-1 relative">
-                        {hours > 0 && (
-                          <>
-                            <div 
-                              className={`${getMachineColor(index)} ${isOverloaded ? 'opacity-100 animate-pulse' : 'opacity-80'} rounded transition-all`}
-                              style={{ height: `${Math.min(heightPercent, 100)}%` }}
-                            />
-                            <span className="absolute top-1 left-0 right-0 text-center text-xs font-semibold text-foreground">
-                              {hours.toFixed(1)}ч
-                            </span>
-                          </>
-                        )}
-                        {isOverloaded && (
-                          <div className="absolute bottom-1 left-0 right-0 flex justify-center">
-                            <Icon name="AlertTriangle" size={14} className="text-red-600" />
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className="w-full h-32 bg-muted rounded-lg flex flex-col justify-end p-1 relative cursor-pointer">
+                            {hours > 0 && (
+                              <>
+                                <div 
+                                  className={`${getMachineColor(index)} ${isOverloaded ? 'opacity-100 animate-pulse' : 'opacity-80'} rounded transition-all`}
+                                  style={{ height: `${Math.min(heightPercent, 100)}%` }}
+                                />
+                                <span className="absolute top-1 left-0 right-0 text-center text-xs font-semibold text-foreground">
+                                  {hours.toFixed(1)}ч
+                                </span>
+                              </>
+                            )}
+                            {isOverloaded && (
+                              <div className="absolute bottom-1 left-0 right-0 flex justify-center">
+                                <Icon name="AlertTriangle" size={14} className="text-red-600" />
+                              </div>
+                            )}
                           </div>
+                        </TooltipTrigger>
+                        {dayTasks.length > 0 && (
+                          <TooltipContent side="top" className="max-w-xs">
+                            <div className="space-y-1">
+                              <p className="font-semibold text-sm mb-2">{day} - {machine}</p>
+                              {dayTasks.map((task, idx) => (
+                                <div key={idx} className="text-xs border-l-2 border-primary pl-2 py-1">
+                                  <p className="font-medium">{task.partName}</p>
+                                  <p className="text-muted-foreground">
+                                    {task.plannedQuantity} шт. × {task.timePerPart} мин = {((task.plannedQuantity * task.timePerPart) / 60).toFixed(1)}ч
+                                  </p>
+                                </div>
+                              ))}
+                            </div>
+                          </TooltipContent>
                         )}
-                      </div>
+                      </Tooltip>
                       <span className="text-xs text-muted-foreground font-medium">{day}</span>
                     </div>
                   );
