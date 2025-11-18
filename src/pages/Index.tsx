@@ -11,6 +11,8 @@ import { CompletionChart } from "@/components/CompletionChart";
 import { ProductionStats } from "@/components/ProductionStats";
 import { SettingsDialog } from "@/components/SettingsDialog";
 import { ArchiveDialog } from "@/components/ArchiveDialog";
+import { productionApi } from "@/lib/productionApi";
+import { useToast } from "@/hooks/use-toast";
 
 const mockTasks: ProductionTask[] = [
   {
@@ -66,6 +68,7 @@ const mockTasks: ProductionTask[] = [
 ];
 
 const Index = () => {
+  const { toast } = useToast();
   const [tasks, setTasks] = useState<ProductionTask[]>([]);
   const [filteredTasks, setFilteredTasks] = useState<ProductionTask[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -74,10 +77,11 @@ const Index = () => {
   const [editingTask, setEditingTask] = useState<ProductionTask | undefined>();
   const [blueprintViewerOpen, setBlueprintViewerOpen] = useState(false);
   const [currentBlueprint, setCurrentBlueprint] = useState<string | undefined>();
+  const [loading, setLoading] = useState(true);
   
   const [settings, setSettings] = useState<Settings>({
-    machines: ['Станок №1', 'Станок №2', 'Станок №3'],
-    operators: ['Иванов И.И.', 'Петров П.П.', 'Сидоров С.С.', 'Кузнецов К.К.'],
+    machines: [],
+    operators: [],
   });
   
   const [filterDay, setFilterDay] = useState<DayOfWeek | 'Все'>('Все');
@@ -85,29 +89,29 @@ const Index = () => {
   const [filterOperator, setFilterOperator] = useState<string>('Все');
 
   useEffect(() => {
-    const savedTasks = localStorage.getItem('productionTasks');
-    const savedSettings = localStorage.getItem('productionSettings');
-    
-    if (savedTasks) {
-      setTasks(JSON.parse(savedTasks));
-    } else {
-      setTasks(mockTasks);
-    }
-    
-    if (savedSettings) {
-      setSettings(JSON.parse(savedSettings));
-    }
+    loadData();
   }, []);
 
-  useEffect(() => {
-    if (tasks.length > 0) {
-      localStorage.setItem('productionTasks', JSON.stringify(tasks));
+  const loadData = async () => {
+    try {
+      setLoading(true);
+      const [settingsData, tasksData] = await Promise.all([
+        productionApi.getSettings(),
+        productionApi.getTasks(false)
+      ]);
+      setSettings(settingsData);
+      setTasks(tasksData);
+    } catch (error) {
+      console.error('Failed to load data:', error);
+      toast({
+        title: 'Ошибка загрузки',
+        description: 'Не удалось загрузить данные с сервера',
+        variant: 'destructive'
+      });
+    } finally {
+      setLoading(false);
     }
-  }, [tasks]);
-  
-  useEffect(() => {
-    localStorage.setItem('productionSettings', JSON.stringify(settings));
-  }, [settings]);
+  };
 
   useEffect(() => {
     let filtered = tasks.filter(task => !task.archived);
@@ -137,54 +141,102 @@ const Index = () => {
     setDialogOpen(true);
   };
 
-  const handleSaveTask = (taskData: Omit<ProductionTask, 'id'>) => {
-    if (editingTask) {
-      setTasks(prev => prev.map(t => t.id === editingTask.id ? { ...taskData, id: editingTask.id } : t));
-    } else {
-      const newTask: ProductionTask = {
-        ...taskData,
-        id: Date.now().toString(),
-      };
-      setTasks(prev => [...prev, newTask]);
+  const handleSaveTask = async (taskData: Omit<ProductionTask, 'id'>) => {
+    try {
+      if (editingTask) {
+        await productionApi.updateTask(editingTask.id, taskData);
+        setTasks(prev => prev.map(t => t.id === editingTask.id ? { ...taskData, id: editingTask.id } : t));
+        toast({ title: 'Задание обновлено' });
+      } else {
+        const result = await productionApi.createTask(taskData);
+        const newTask: ProductionTask = { ...taskData, id: result.id };
+        setTasks(prev => [...prev, newTask]);
+        toast({ title: 'Задание создано' });
+      }
+    } catch (error) {
+      toast({ title: 'Ошибка', description: 'Не удалось сохранить задание', variant: 'destructive' });
     }
   };
 
-  const handleDeleteTask = (id: string) => {
+  const handleDeleteTask = async (id: string) => {
     if (confirm('Удалить задание из плана?')) {
       setTasks(prev => prev.filter(t => t.id !== id));
+      toast({ title: 'Задание удалено' });
     }
   };
 
-  const handleArchiveTask = (id: string) => {
+  const handleArchiveTask = async (id: string) => {
     if (confirm('Переместить выполненную деталь в архив?')) {
-      setTasks(prev => prev.map(t => 
-        t.id === id 
-          ? { ...t, archived: true, archivedAt: new Date().toISOString(), completedAt: new Date().toISOString() }
-          : t
-      ));
+      try {
+        const task = tasks.find(t => t.id === id);
+        if (task) {
+          await productionApi.updateTask(id, {
+            ...task,
+            archived: true,
+            archivedAt: new Date().toISOString(),
+            completedAt: new Date().toISOString()
+          });
+          setTasks(prev => prev.map(t => 
+            t.id === id 
+              ? { ...t, archived: true, archivedAt: new Date().toISOString(), completedAt: new Date().toISOString() }
+              : t
+          ));
+          toast({ title: 'Перемещено в архив' });
+        }
+      } catch (error) {
+        toast({ title: 'Ошибка', variant: 'destructive' });
+      }
     }
   };
 
-  const handleRestoreTask = (id: string) => {
-    setTasks(prev => prev.map(t => 
-      t.id === id 
-        ? { ...t, archived: false, archivedAt: undefined, completedAt: undefined }
-        : t
-    ));
+  const handleRestoreTask = async (id: string) => {
+    try {
+      const task = tasks.find(t => t.id === id);
+      if (task) {
+        await productionApi.updateTask(id, {
+          ...task,
+          archived: false,
+          archivedAt: undefined,
+          completedAt: undefined
+        });
+        setTasks(prev => prev.map(t => 
+          t.id === id 
+            ? { ...t, archived: false, archivedAt: undefined, completedAt: undefined }
+            : t
+        ));
+        toast({ title: 'Восстановлено из архива' });
+      }
+    } catch (error) {
+      toast({ title: 'Ошибка', variant: 'destructive' });
+    }
   };
 
   const handleDeleteFromArchive = (id: string) => {
     setTasks(prev => prev.filter(t => t.id !== id));
   };
 
-  const handleUpdatePlanned = (id: string, plannedQuantity: number) => {
-    setTasks(prev => prev.map(t => 
-      t.id === id ? { ...t, plannedQuantity } : t
-    ));
+  const handleUpdatePlanned = async (id: string, plannedQuantity: number) => {
+    try {
+      const task = tasks.find(t => t.id === id);
+      if (task) {
+        await productionApi.updateTask(id, { ...task, plannedQuantity });
+        setTasks(prev => prev.map(t => t.id === id ? { ...t, plannedQuantity } : t));
+      }
+    } catch (error) {
+      toast({ title: 'Ошибка', variant: 'destructive' });
+    }
   };
 
-  const handleUpdateActual = (id: string, actualQuantity: number) => {
-    setTasks(prev => prev.map(t => t.id === id ? { ...t, actualQuantity } : t));
+  const handleUpdateActual = async (id: string, actualQuantity: number) => {
+    try {
+      const task = tasks.find(t => t.id === id);
+      if (task) {
+        await productionApi.updateTask(id, { ...task, actualQuantity });
+        setTasks(prev => prev.map(t => t.id === id ? { ...t, actualQuantity } : t));
+      }
+    } catch (error) {
+      toast({ title: 'Ошибка', variant: 'destructive' });
+    }
   };
 
   const handleViewBlueprint = (blueprint?: string) => {
@@ -194,35 +246,45 @@ const Index = () => {
     }
   };
 
-  const handleSaveSettings = (newSettings: Settings) => {
-    // Обновляем задачи, если станки или операторы были изменены
-    const oldMachines = settings.machines;
-    const newMachines = newSettings.machines;
-    const oldOperators = settings.operators;
-    const newOperators = newSettings.operators;
-    
-    setTasks(prev => prev.map(task => {
-      const updatedTask = { ...task };
+  const handleSaveSettings = async (newSettings: Settings) => {
+    try {
+      await productionApi.updateSettings(newSettings);
       
-      // Если станок задачи больше не существует, назначаем первый доступный
-      if (!newMachines.includes(task.machine)) {
-        updatedTask.machine = newMachines[0] || task.machine;
-      }
+      const newMachines = newSettings.machines;
+      const newOperators = newSettings.operators;
       
-      // Если оператор задачи больше не существует, назначаем первого доступного
-      if (!newOperators.includes(task.operator)) {
-        updatedTask.operator = newOperators[0] || task.operator;
-      }
+      setTasks(prev => prev.map(task => {
+        const updatedTask = { ...task };
+        
+        if (!newMachines.includes(task.machine)) {
+          updatedTask.machine = newMachines[0] || task.machine;
+        }
+        
+        if (!newOperators.includes(task.operator)) {
+          updatedTask.operator = newOperators[0] || task.operator;
+        }
+        
+        return updatedTask;
+      }));
       
-      return updatedTask;
-    }));
-    
-    setSettings(newSettings);
+      setSettings(newSettings);
+      toast({ title: 'Настройки сохранены' });
+    } catch (error) {
+      toast({ title: 'Ошибка', description: 'Не удалось сохранить настройки', variant: 'destructive' });
+    }
   };
 
   const uniqueOperators = Array.from(new Set(tasks.map(t => t.operator)));
   const archivedTasks = tasks.filter(task => task.archived);
   const activeTasks = tasks.filter(task => !task.archived);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <p className="text-muted-foreground">Загрузка...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background p-6">

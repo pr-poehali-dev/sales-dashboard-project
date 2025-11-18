@@ -1,14 +1,13 @@
 {
   "tests": [
     {
-      "name": "Get dashboard statistics",
+      "name": "Get production settings",
       "method": "GET",
+      "path": "/?action=settings",
       "expectedStatus": 200,
       "expectedBody": {
-        "totalOrders": "number",
-        "activeOrders": "number",
-        "completedOrders": "number",
-        "overdueOrders": "number"
+        "machines": "array",
+        "operators": "array"
       },
       "bodyMatcher": "partial"
     }
