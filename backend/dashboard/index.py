@@ -71,8 +71,11 @@ def handle_production(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         # PUT ?action=settings
         if method == 'PUT' and action == 'settings':
             body_data = json.loads(event.get('body', '{}'))
-            machines_str = ','.join([f'"{m}"' for m in body_data.get('machines', [])])
-            operators_str = ','.join([f'"{o}"' for o in body_data.get('operators', [])])
+            machines = body_data.get('machines', [])
+            operators = body_data.get('operators', [])
+            
+            machines_str = ','.join([f"'{m.replace(chr(39), chr(39)+chr(39))}'" for m in machines])
+            operators_str = ','.join([f"'{o.replace(chr(39), chr(39)+chr(39))}'" for o in operators])
             
             query = f"UPDATE production_settings SET machines = ARRAY[{machines_str}], operators = ARRAY[{operators_str}], updated_at = CURRENT_TIMESTAMP WHERE id = 1"
             cur.execute(query)

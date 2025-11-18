@@ -15,7 +15,11 @@ export const productionApi = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(settings),
     });
-    if (!response.ok) throw new Error('Failed to update settings');
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Update settings error:', response.status, errorText);
+      throw new Error(`Failed to update settings: ${response.status} ${errorText}`);
+    }
   },
 
   async getTasks(archived = false): Promise<ProductionTask[]> {
