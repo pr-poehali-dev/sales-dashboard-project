@@ -10,6 +10,13 @@
         "operators": "array"
       },
       "bodyMatcher": "partial"
+    },
+    {
+      "name": "Get production tasks",
+      "method": "GET",
+      "path": "/?action=tasks&archived=false",
+      "expectedStatus": 200,
+      "bodyMatcher": "partial"
     }
   ]
 }

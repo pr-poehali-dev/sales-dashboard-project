@@ -142,12 +142,16 @@ def handle_production(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             
             scheduled_date = f"'{body_data.get('scheduledDate')}'" if body_data.get('scheduledDate') else 'NULL'
             
+            part_name_escaped = body_data.get('partName', '').replace(chr(39), chr(39)+chr(39))
+            machine_escaped = body_data.get('machine', '').replace(chr(39), chr(39)+chr(39))
+            operator_escaped = body_data.get('operator', '').replace(chr(39), chr(39)+chr(39))
+            
             query = f"""
                 INSERT INTO production_tasks 
                 (day_of_week, scheduled_date, part_name, planned_quantity, time_per_part, machine, operator, actual_quantity)
-                VALUES ('{body_data.get('dayOfWeek')}', {scheduled_date}, '{body_data.get('partName')}', 
+                VALUES ('{body_data.get('dayOfWeek')}', {scheduled_date}, '{part_name_escaped}', 
                         {body_data.get('plannedQuantity')}, {body_data.get('timePerPart')}, 
-                        '{body_data.get('machine')}', '{body_data.get('operator')}', {body_data.get('actualQuantity', 0)})
+                        '{machine_escaped}', '{operator_escaped}', {body_data.get('actualQuantity', 0)})
                 RETURNING id
             """
             cur.execute(query)
@@ -155,9 +159,12 @@ def handle_production(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             
             blueprints = body_data.get('blueprints', [])
             for blueprint in blueprints:
+                file_name_escaped = blueprint.get('name', '').replace(chr(39), chr(39)+chr(39))
+                file_url_escaped = blueprint.get('url', '').replace(chr(39), chr(39)+chr(39))
+                file_type_escaped = blueprint.get('type', '').replace(chr(39), chr(39)+chr(39))
                 cur.execute(
                     f"INSERT INTO production_blueprints (task_id, file_name, file_url, file_type) "
-                    f"VALUES ({task_id_result}, '{blueprint.get('name')}', '{blueprint.get('url')}', '{blueprint.get('type')}')"
+                    f"VALUES ({task_id_result}, '{file_name_escaped}', '{file_url_escaped}', '{file_type_escaped}')"
                 )
             
             conn.commit()
@@ -177,15 +184,19 @@ def handle_production(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             archived_at = f"'{body_data.get('archivedAt')}'" if body_data.get('archivedAt') else 'NULL'
             completed_at = f"'{body_data.get('completedAt')}'" if body_data.get('completedAt') else 'NULL'
             
+            part_name_escaped = body_data.get('partName', '').replace(chr(39), chr(39)+chr(39))
+            machine_escaped = body_data.get('machine', '').replace(chr(39), chr(39)+chr(39))
+            operator_escaped = body_data.get('operator', '').replace(chr(39), chr(39)+chr(39))
+            
             query = f"""
                 UPDATE production_tasks 
                 SET day_of_week = '{body_data.get('dayOfWeek')}',
                     scheduled_date = {scheduled_date},
-                    part_name = '{body_data.get('partName')}',
+                    part_name = '{part_name_escaped}',
                     planned_quantity = {body_data.get('plannedQuantity')},
                     time_per_part = {body_data.get('timePerPart')},
-                    machine = '{body_data.get('machine')}',
-                    operator = '{body_data.get('operator')}',
+                    machine = '{machine_escaped}',
+                    operator = '{operator_escaped}',
                     actual_quantity = {body_data.get('actualQuantity', 0)},
                     archived = {'TRUE' if body_data.get('archived') else 'FALSE'},
                     archived_at = {archived_at},
@@ -194,6 +205,19 @@ def handle_production(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 WHERE id = {task_id}
             """
             cur.execute(query)
+            
+            blueprints = body_data.get('blueprints', [])
+            if blueprints:
+                cur.execute(f"DELETE FROM production_blueprints WHERE task_id = {task_id}")
+                for blueprint in blueprints:
+                    file_name_escaped = blueprint.get('name', '').replace(chr(39), chr(39)+chr(39))
+                    file_url_escaped = blueprint.get('url', '').replace(chr(39), chr(39)+chr(39))
+                    file_type_escaped = blueprint.get('type', '').replace(chr(39), chr(39)+chr(39))
+                    cur.execute(
+                        f"INSERT INTO production_blueprints (task_id, file_name, file_url, file_type) "
+                        f"VALUES ({task_id}, '{file_name_escaped}', '{file_url_escaped}', '{file_type_escaped}')"
+                    )
+            
             conn.commit()
             
             return {
