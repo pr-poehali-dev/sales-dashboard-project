@@ -157,10 +157,14 @@ export const TaskDialog = ({ open, onOpenChange, task, onSave, machines, operato
                     if (date) {
                       const dayNames: DayOfWeek[] = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
                       const dayOfWeek = dayNames[date.getDay()];
+                      const year = date.getFullYear();
+                      const month = String(date.getMonth() + 1).padStart(2, '0');
+                      const day = String(date.getDate()).padStart(2, '0');
+                      const dateString = `${year}-${month}-${day}`;
                       setFormData(prev => ({
                         ...prev,
                         dayOfWeek,
-                        scheduledDate: date.toISOString()
+                        scheduledDate: dateString
                       }));
                     }
                   }}
