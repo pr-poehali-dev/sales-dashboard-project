@@ -13,6 +13,16 @@ import { SettingsDialog } from "@/components/SettingsDialog";
 import { ArchiveDialog } from "@/components/ArchiveDialog";
 import { productionApi } from "@/lib/productionApi";
 import { useToast } from "@/hooks/use-toast";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const mockTasks: ProductionTask[] = [
   {
@@ -78,6 +88,8 @@ const Index = () => {
   const [blueprintViewerOpen, setBlueprintViewerOpen] = useState(false);
   const [currentBlueprint, setCurrentBlueprint] = useState<string | undefined>();
   const [loading, setLoading] = useState(true);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deletingTaskId, setDeletingTaskId] = useState<string | null>(null);
   
   const [settings, setSettings] = useState<Settings>({
     machines: [],
@@ -159,9 +171,16 @@ const Index = () => {
   };
 
   const handleDeleteTask = async (id: string) => {
-    if (confirm('Удалить задание из плана?')) {
-      setTasks(prev => prev.filter(t => t.id !== id));
+    setDeletingTaskId(id);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (deletingTaskId) {
+      setTasks(prev => prev.filter(t => t.id !== deletingTaskId));
       toast({ title: 'Задание удалено' });
+      setDeleteDialogOpen(false);
+      setDeletingTaskId(null);
     }
   };
 
@@ -430,6 +449,23 @@ const Index = () => {
           onRestore={handleRestoreTask}
           onDelete={handleDeleteFromArchive}
         />
+
+        <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Подтвердите удаление</AlertDialogTitle>
+              <AlertDialogDescription>
+                Вы действительно хотите удалить это задание из плана? Это действие нельзя отменить.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Отмена</AlertDialogCancel>
+              <AlertDialogAction onClick={confirmDelete} className="bg-destructive hover:bg-destructive/90">
+                Удалить
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </div>
   );
