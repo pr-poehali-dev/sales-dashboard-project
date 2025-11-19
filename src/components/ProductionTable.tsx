@@ -70,21 +70,21 @@ export const ProductionTable = ({
   };
 
   return (
-    <div className="rounded-lg border overflow-hidden">
+    <div className="rounded-lg border overflow-hidden overflow-x-auto">
       <Table>
         <TableHeader>
           <TableRow className="bg-muted/50">
-            <TableHead className="w-32">Дата</TableHead>
-            <TableHead>Деталь</TableHead>
-            <TableHead className="w-24">План</TableHead>
-            <TableHead className="w-28">Время/шт</TableHead>
-            <TableHead className="w-28">Всего</TableHead>
-            <TableHead className="w-32">Станок</TableHead>
-            <TableHead>Оператор</TableHead>
-            <TableHead className="w-20">Чертёж</TableHead>
-            <TableHead className="w-28">Факт</TableHead>
-            <TableHead className="w-28">%</TableHead>
-            <TableHead className="w-32">Действия</TableHead>
+            <TableHead className="w-20 sm:w-32 text-xs sm:text-sm">Дата</TableHead>
+            <TableHead className="text-xs sm:text-sm">Деталь</TableHead>
+            <TableHead className="w-16 sm:w-24 text-xs sm:text-sm">План</TableHead>
+            <TableHead className="w-20 sm:w-28 text-xs sm:text-sm hidden md:table-cell">Время/шт</TableHead>
+            <TableHead className="w-20 sm:w-28 text-xs sm:text-sm hidden lg:table-cell">Всего</TableHead>
+            <TableHead className="w-24 sm:w-32 text-xs sm:text-sm hidden sm:table-cell">Станок</TableHead>
+            <TableHead className="text-xs sm:text-sm hidden md:table-cell">Оператор</TableHead>
+            <TableHead className="w-16 sm:w-20 text-xs sm:text-sm hidden lg:table-cell">Чертёж</TableHead>
+            <TableHead className="w-20 sm:w-28 text-xs sm:text-sm">Факт</TableHead>
+            <TableHead className="w-16 sm:w-28 text-xs sm:text-sm">%</TableHead>
+            <TableHead className="w-24 sm:w-32 text-xs sm:text-sm">Действия</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -102,31 +102,31 @@ export const ProductionTable = ({
               const completion = calculateCompletion(task);
               return (
                 <TableRow key={task.id} className="hover:bg-muted/30">
-                  <TableCell className="font-medium">
+                  <TableCell className="font-medium text-xs sm:text-sm">
                     <div className="flex flex-col">
                       {task.scheduledDate ? (
                         <>
-                          <span className="text-sm">{format(new Date(task.scheduledDate), 'd MMM', { locale: ru })}</span>
-                          <span className="text-xs text-muted-foreground">{task.dayOfWeek}</span>
+                          <span className="text-xs sm:text-sm">{format(new Date(task.scheduledDate), 'd MMM', { locale: ru })}</span>
+                          <span className="text-[10px] sm:text-xs text-muted-foreground">{task.dayOfWeek}</span>
                         </>
                       ) : (
-                        <span>{task.dayOfWeek}</span>
+                        <span className="text-xs sm:text-sm">{task.dayOfWeek}</span>
                       )}
                     </div>
                   </TableCell>
-                  <TableCell className="font-semibold">{task.partName}</TableCell>
+                  <TableCell className="font-semibold text-xs sm:text-sm">{task.partName}</TableCell>
                   <TableCell>
-                    <span className="font-medium">{task.plannedQuantity}</span>
+                    <span className="font-medium text-xs sm:text-sm">{task.plannedQuantity}</span>
                   </TableCell>
-                  <TableCell>{task.timePerPart}м</TableCell>
-                  <TableCell className="text-muted-foreground">{calculateTotalTime(task)}</TableCell>
-                  <TableCell>
-                    <Badge variant="outline" className={getMachineColor(task.machine, machines)}>
+                  <TableCell className="text-xs sm:text-sm hidden md:table-cell">{task.timePerPart}м</TableCell>
+                  <TableCell className="text-muted-foreground text-xs sm:text-sm hidden lg:table-cell">{calculateTotalTime(task)}</TableCell>
+                  <TableCell className="hidden sm:table-cell">
+                    <Badge variant="outline" className={`${getMachineColor(task.machine, machines)} text-xs`}>
                       {task.machine}
                     </Badge>
                   </TableCell>
-                  <TableCell className="text-muted-foreground">{task.operator}</TableCell>
-                  <TableCell>
+                  <TableCell className="text-muted-foreground text-xs sm:text-sm hidden md:table-cell">{task.operator}</TableCell>
+                  <TableCell className="hidden lg:table-cell">
                     {(() => {
                       const hasBlueprints = task.blueprints && task.blueprints.length > 0;
                       const hasLegacyBlueprint = task.blueprint && task.blueprint.trim() !== '';
@@ -145,12 +145,12 @@ export const ProductionTable = ({
                               : [{ name: 'Чертёж.pdf', url: task.blueprint!, type: 'application/pdf' }];
                             setViewingBlueprints({ partName: task.partName, blueprints: blueprints || [] });
                           }}
-                          className="h-8 px-2 gap-1"
+                          className="h-6 sm:h-8 px-1 sm:px-2 gap-1"
                           title="Просмотр файлов"
                         >
-                          <Icon name="FileText" size={16} className="text-blue-600" />
+                          <Icon name="FileText" size={14} className="text-blue-600 sm:w-4 sm:h-4" />
                           {hasBlueprints && task.blueprints!.length > 1 && (
-                            <Badge variant="secondary" className="h-5 px-1.5 text-xs">
+                            <Badge variant="secondary" className="h-4 sm:h-5 px-1 sm:px-1.5 text-[10px] sm:text-xs">
                               {task.blueprints!.length}
                             </Badge>
                           )}
@@ -159,12 +159,12 @@ export const ProductionTable = ({
                     })()}
                   </TableCell>
                   <TableCell>
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-0.5 sm:gap-1">
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => onUpdateActual(task.id, Math.max(0, task.actualQuantity - 1))}
-                        className="h-8 w-8 p-0 text-lg font-bold"
+                        className="h-6 w-6 sm:h-8 sm:w-8 p-0 text-sm sm:text-lg font-bold"
                       >
                         −
                       </Button>
@@ -173,53 +173,53 @@ export const ProductionTable = ({
                         min="0"
                         value={task.actualQuantity}
                         onChange={(e) => onUpdateActual(task.id, parseInt(e.target.value) || 0)}
-                        className="w-16 h-8 text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        className="w-10 sm:w-16 h-6 sm:h-8 text-center text-xs sm:text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                       />
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => onUpdateActual(task.id, task.actualQuantity + 1)}
-                        className="h-8 w-8 p-0 text-lg font-bold"
+                        className="h-6 w-6 sm:h-8 sm:w-8 p-0 text-sm sm:text-lg font-bold"
                       >
                         +
                       </Button>
                     </div>
                   </TableCell>
                   <TableCell>
-                    <Badge variant="outline" className={getCompletionColor(completion)}>
+                    <Badge variant="outline" className={`${getCompletionColor(completion)} text-[10px] sm:text-xs`}>
                       {completion}%
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    <div className="flex gap-1">
+                    <div className="flex gap-0.5 sm:gap-1">
                       <Button
                         variant="ghost"
                         size="sm"
                         onClick={() => onEdit(task)}
-                        className="h-8 w-8 p-0"
+                        className="h-6 w-6 sm:h-8 sm:w-8 p-0"
                         title="Редактировать"
                       >
-                        <Icon name="Edit" size={16} />
+                        <Icon name="Edit" size={14} className="sm:w-4 sm:h-4" />
                       </Button>
                       {completion >= 100 ? (
                         <Button
                           variant="ghost"
                           size="sm"
                           onClick={() => onArchive(task.id)}
-                          className="h-8 w-8 p-0 text-green-600 hover:text-green-700 hover:bg-green-50"
+                          className="h-6 w-6 sm:h-8 sm:w-8 p-0 text-green-600 hover:text-green-700 hover:bg-green-50"
                           title="Переместить в архив"
                         >
-                          <Icon name="Archive" size={16} />
+                          <Icon name="Archive" size={14} className="sm:w-4 sm:h-4" />
                         </Button>
                       ) : (
                         <Button
                           variant="ghost"
                           size="sm"
                           onClick={() => onDelete(task.id)}
-                          className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+                          className="h-6 w-6 sm:h-8 sm:w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
                           title="Удалить"
                         >
-                          <Icon name="Trash2" size={16} />
+                          <Icon name="Trash2" size={14} className="sm:w-4 sm:h-4" />
                         </Button>
                       )}
                     </div>

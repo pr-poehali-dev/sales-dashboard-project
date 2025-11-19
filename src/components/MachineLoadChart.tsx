@@ -118,21 +118,21 @@ export const MachineLoadChart = ({ tasks, machines }: MachineLoadChartProps) => 
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Icon name="BarChart3" size={20} />
-          Загрузка станков по дням (часы)
+      <CardHeader className="p-4 sm:p-6">
+        <CardTitle className="flex items-center gap-2 text-sm sm:text-base">
+          <Icon name="BarChart3" size={16} className="sm:w-5 sm:h-5" />
+          <span className="text-sm sm:text-base">Загрузка станков по дням</span>
         </CardTitle>
       </CardHeader>
-      <CardContent>
-        <div className="space-y-6">
+      <CardContent className="p-4 sm:p-6">
+        <div className="space-y-4 sm:space-y-6">
           {machines.map((machine, index) => (
             <div key={machine} className="space-y-2">
               <div className="flex items-center gap-2">
-                <div className={`w-3 h-3 rounded ${getMachineColor(index)}`} />
-                <span className="font-medium text-sm">{machine}</span>
+                <div className={`w-2 h-2 sm:w-3 sm:h-3 rounded ${getMachineColor(index)}`} />
+                <span className="font-medium text-xs sm:text-sm">{machine}</span>
               </div>
-              <div className="grid grid-cols-7 gap-2">
+              <div className="grid grid-cols-7 gap-1 sm:gap-2">
                 {daysOfWeek.map(day => {
                   const hours = loadData[machine][day] || 0;
                   const heightPercent = maxHours > 0 ? (hours / maxHours) * 100 : 0;
@@ -140,10 +140,10 @@ export const MachineLoadChart = ({ tasks, machines }: MachineLoadChartProps) => 
                   const dayTasks = tasksByMachineDay[machine][day] || [];
                   
                   return (
-                    <div key={day} className="flex flex-col items-center gap-1">
+                    <div key={day} className="flex flex-col items-center gap-0.5 sm:gap-1">
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <div className="w-full h-32 bg-muted rounded-lg flex flex-col justify-end p-1 relative cursor-pointer">
+                          <div className="w-full h-20 sm:h-32 bg-muted rounded-lg flex flex-col justify-end p-0.5 sm:p-1 relative cursor-pointer">
                             {hours > 0 && (
                               <div 
                                 className={`${getMachineColor(index)} ${isOverloaded ? 'opacity-100 animate-pulse' : 'opacity-80'} rounded transition-all`}
@@ -151,16 +151,16 @@ export const MachineLoadChart = ({ tasks, machines }: MachineLoadChartProps) => 
                               />
                             )}
                             {isOverloaded && (
-                              <div className="absolute bottom-1 left-0 right-0 flex justify-center">
-                                <Icon name="AlertTriangle" size={14} className="text-red-600" />
+                              <div className="absolute bottom-0.5 sm:bottom-1 left-0 right-0 flex justify-center">
+                                <Icon name="AlertTriangle" size={10} className="sm:w-3.5 sm:h-3.5 text-red-600" />
                               </div>
                             )}
                           </div>
                         </TooltipTrigger>
                         {dayTasks.length > 0 && (
-                          <TooltipContent side="top" className="max-w-xs">
+                          <TooltipContent side="top" className="max-w-xs text-xs sm:text-sm">
                             <div className="space-y-1">
-                              <p className="font-semibold text-sm mb-2">{day} - {machine}</p>
+                              <p className="font-semibold text-xs sm:text-sm mb-2">{day} - {machine}</p>
                               {dayTasks.map((task: any, idx: number) => {
                                 const totalHours = (task.plannedQuantity * task.timePerPart) / 60;
                                 const displayHours = task.displayHours || totalHours;
@@ -181,7 +181,7 @@ export const MachineLoadChart = ({ tasks, machines }: MachineLoadChartProps) => 
                           </TooltipContent>
                         )}
                       </Tooltip>
-                      <span className="text-xs text-muted-foreground font-medium">{day}</span>
+                      <span className="text-[10px] sm:text-xs text-muted-foreground font-medium">{day}</span>
                     </div>
                   );
                 })}
@@ -189,9 +189,9 @@ export const MachineLoadChart = ({ tasks, machines }: MachineLoadChartProps) => 
             </div>
           ))}
         </div>
-        <div className="mt-6 flex items-center gap-4 text-xs text-muted-foreground border-t pt-4">
-          <div className="flex items-center gap-2">
-            <Icon name="AlertTriangle" size={14} className="text-red-600" />
+        <div className="mt-4 sm:mt-6 flex items-center gap-2 sm:gap-4 text-[10px] sm:text-xs text-muted-foreground border-t pt-3 sm:pt-4">
+          <div className="flex items-center gap-1 sm:gap-2">
+            <Icon name="AlertTriangle" size={12} className="sm:w-3.5 sm:h-3.5 text-red-600" />
             <span>Перегрузка станка</span>
           </div>
         </div>

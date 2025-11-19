@@ -287,39 +287,40 @@ const Index = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background p-6">
-      <div className="max-w-[1600px] mx-auto space-y-6">
-        <header className="flex items-center justify-between">
+    <div className="min-h-screen bg-background p-2 sm:p-4 lg:p-6">
+      <div className="max-w-[1600px] mx-auto space-y-4 sm:space-y-6">
+        <header className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-foreground">Производственный дашборд</h1>
-            <p className="text-muted-foreground mt-1">Участок металлообработки - планирование и учёт</p>
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground">Производственный дашборд</h1>
+            <p className="text-xs sm:text-sm text-muted-foreground mt-1">Участок металлообработки - планирование и учёт</p>
           </div>
-          <div className="flex gap-2">
-            <Button onClick={() => setArchiveOpen(true)} variant="outline" size="lg">
-              <Icon name="Archive" size={18} className="mr-2" />
-              Архив ({archivedTasks.length})
+          <div className="flex flex-wrap gap-2 w-full sm:w-auto">
+            <Button onClick={() => setArchiveOpen(true)} variant="outline" size="sm" className="flex-1 sm:flex-initial">
+              <Icon name="Archive" size={16} className="sm:mr-2" />
+              <span className="hidden sm:inline">Архив</span> ({archivedTasks.length})
             </Button>
-            <Button onClick={() => setSettingsOpen(true)} variant="outline" size="lg">
-              <Icon name="Settings" size={18} className="mr-2" />
-              Настройки
+            <Button onClick={() => setSettingsOpen(true)} variant="outline" size="sm" className="flex-1 sm:flex-initial">
+              <Icon name="Settings" size={16} className="sm:mr-2" />
+              <span className="hidden sm:inline">Настройки</span>
             </Button>
-            <Button onClick={handleAddTask} size="lg">
-              <Icon name="Plus" size={18} className="mr-2" />
-              Добавить деталь
+            <Button onClick={handleAddTask} size="sm" className="flex-1 sm:flex-initial">
+              <Icon name="Plus" size={16} className="sm:mr-2" />
+              <span className="hidden lg:inline">Добавить деталь</span>
+              <span className="lg:hidden">Добавить</span>
             </Button>
           </div>
         </header>
 
-        <div className="flex flex-wrap gap-4 items-center bg-card p-4 rounded-lg border">
+        <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 items-start sm:items-center bg-card p-3 sm:p-4 rounded-lg border">
           <div className="flex items-center gap-2">
-            <Icon name="Filter" size={18} className="text-muted-foreground" />
+            <Icon name="Filter" size={16} className="text-muted-foreground" />
             <span className="text-sm font-medium">Фильтры:</span>
           </div>
           
-          <div className="flex items-center gap-2">
-            <label className="text-sm text-muted-foreground">День:</label>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full sm:w-auto">
+            <label className="text-xs sm:text-sm text-muted-foreground">День:</label>
             <Select value={filterDay} onValueChange={(value) => setFilterDay(value as DayOfWeek | 'Все')}>
-              <SelectTrigger className="w-24">
+              <SelectTrigger className="w-full sm:w-32">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -335,10 +336,10 @@ const Index = () => {
             </Select>
           </div>
 
-          <div className="flex items-center gap-2">
-            <label className="text-sm text-muted-foreground">Станок:</label>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full sm:w-auto">
+            <label className="text-xs sm:text-sm text-muted-foreground">Станок:</label>
             <Select value={filterMachine} onValueChange={(value) => setFilterMachine(value)}>
-              <SelectTrigger className="w-32">
+              <SelectTrigger className="w-full sm:w-32">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -350,10 +351,10 @@ const Index = () => {
             </Select>
           </div>
 
-          <div className="flex items-center gap-2">
-            <label className="text-sm text-muted-foreground">Оператор:</label>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full sm:w-auto">
+            <label className="text-xs sm:text-sm text-muted-foreground">Оператор:</label>
             <Select value={filterOperator} onValueChange={setFilterOperator}>
-              <SelectTrigger className="w-40">
+              <SelectTrigger className="w-full sm:w-40">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -374,6 +375,7 @@ const Index = () => {
                 setFilterMachine('Все');
                 setFilterOperator('Все');
               }}
+              className="w-full sm:w-auto"
             >
               <Icon name="X" size={16} className="mr-1" />
               Сбросить

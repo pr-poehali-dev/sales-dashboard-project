@@ -81,19 +81,19 @@ export const ProductionStats = ({ tasks }: ProductionStatsProps) => {
   ];
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-4">
       {statsCards.map((stat, index) => (
         <Card key={index} className="hover:shadow-md transition-shadow">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-xs font-medium text-muted-foreground">
+          <CardHeader className="flex flex-row items-center justify-between pb-1 sm:pb-2 p-3 sm:p-6">
+            <CardTitle className="text-[10px] sm:text-xs font-medium text-muted-foreground">
               {stat.title}
             </CardTitle>
-            <div className={`p-2 rounded-lg ${stat.color}`}>
-              <Icon name={stat.icon} size={16} />
+            <div className={`p-1 sm:p-2 rounded-lg ${stat.color}`}>
+              <Icon name={stat.icon} size={14} className="sm:w-4 sm:h-4" />
             </div>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stat.value}</div>
+          <CardContent className="p-3 sm:p-6 pt-0">
+            <div className="text-lg sm:text-2xl font-bold">{stat.value}</div>
           </CardContent>
         </Card>
       ))}
