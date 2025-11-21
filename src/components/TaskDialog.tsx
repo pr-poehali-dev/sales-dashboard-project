@@ -201,10 +201,20 @@ export const TaskDialog = ({ open, onOpenChange, task, onSave, machines, operato
       
       const totalTime = operations.reduce((sum, op) => sum + op.timePerPart, 0);
       
+      const savedOperations = operations.map(op => ({
+        id: op.id,
+        operationNumber: op.operationNumber,
+        operationName: op.operationName,
+        machine: op.machine,
+        operator: op.operator,
+        timePerPart: op.timePerPart,
+        actualQuantity: op.actualQuantity || 0,
+      }));
+      
       onSave({
         ...formData,
         isMultiOperation: true,
-        operations: operations,
+        operations: savedOperations,
         timePerPart: totalTime,
         machine: operations[0].machine,
         operator: operations[0].operator,
@@ -217,6 +227,7 @@ export const TaskDialog = ({ open, onOpenChange, task, onSave, machines, operato
       onSave({
         ...formData,
         isMultiOperation: false,
+        operations: undefined,
       });
     }
     

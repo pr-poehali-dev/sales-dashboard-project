@@ -157,8 +157,14 @@ const Index = () => {
   const handleSaveTask = async (taskData: Omit<ProductionTask, 'id'>) => {
     try {
       if (editingTask) {
-        await productionApi.updateTask(editingTask.id, taskData);
-        setTasks(prev => prev.map(t => t.id === editingTask.id ? { ...taskData, id: editingTask.id } : t));
+        const fullTaskData = {
+          ...taskData,
+          isMultiOperation: taskData.isMultiOperation || false,
+          operations: taskData.isMultiOperation ? (taskData.operations || []) : undefined,
+        };
+        console.log('Saving task with operations:', fullTaskData);
+        await productionApi.updateTask(editingTask.id, fullTaskData);
+        setTasks(prev => prev.map(t => t.id === editingTask.id ? { ...fullTaskData, id: editingTask.id } : t));
         toast({ title: 'Задание обновлено' });
       } else {
         const result = await productionApi.createTask(taskData);
@@ -167,6 +173,7 @@ const Index = () => {
         toast({ title: 'Задание создано' });
       }
     } catch (error) {
+      console.error('Save task error:', error);
       toast({ title: 'Ошибка', description: 'Не удалось сохранить задание', variant: 'destructive' });
     }
   };
@@ -262,16 +269,21 @@ const Index = () => {
   const handleUpdateOperationActual = async (taskId: string, operationId: string, actualQuantity: number) => {
     try {
       const task = tasks.find(t => t.id === taskId);
-      if (task && task.operations) {
+      if (task && task.operations && task.isMultiOperation) {
         const updatedOperations = task.operations.map(op => 
           op.id === operationId ? { ...op, actualQuantity } : op
         );
         
-        const updatedTask = { ...task, operations: updatedOperations };
+        const updatedTask = { 
+          ...task, 
+          operations: updatedOperations,
+          isMultiOperation: true
+        };
         await productionApi.updateTask(taskId, updatedTask);
         setTasks(prev => prev.map(t => t.id === taskId ? updatedTask : t));
       }
     } catch (error) {
+      console.error('Failed to update operation:', error);
       toast({ title: 'Ошибка', variant: 'destructive' });
     }
   };
