@@ -4,6 +4,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import Icon from "@/components/ui/icon";
 import { ProductionTask, DayOfWeek, Settings } from "@/types/production";
 import { ProductionTable } from "@/components/ProductionTable";
+import { ProductionTableMobile } from "@/components/ProductionTableMobile";
 import { TaskDialog } from "@/components/TaskDialog";
 import { BlueprintViewer } from "@/components/BlueprintViewer";
 import { MachineLoadChart } from "@/components/MachineLoadChart";
@@ -347,89 +348,106 @@ const Index = () => {
           </div>
         </header>
 
-        <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 items-start sm:items-center bg-card p-3 sm:p-4 rounded-lg border">
-          <div className="flex items-center gap-2">
-            <Icon name="Filter" size={16} className="text-muted-foreground" />
-            <span className="text-sm font-medium">Фильтры:</span>
+        <div className="bg-card p-3 sm:p-4 rounded-lg border space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Icon name="Filter" size={16} className="text-muted-foreground" />
+              <span className="text-sm font-medium">Фильтры</span>
+            </div>
+            {(filterDay !== 'Все' || filterMachine !== 'Все' || filterOperator !== 'Все') && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setFilterDay('Все');
+                  setFilterMachine('Все');
+                  setFilterOperator('Все');
+                }}
+                className="h-8 px-2"
+              >
+                <Icon name="X" size={14} className="mr-1" />
+                <span className="text-xs">Сбросить</span>
+              </Button>
+            )}
           </div>
           
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full sm:w-auto">
-            <label className="text-xs sm:text-sm text-muted-foreground">День:</label>
-            <Select value={filterDay} onValueChange={(value) => setFilterDay(value as DayOfWeek | 'Все')}>
-              <SelectTrigger className="w-full sm:w-32">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Все">Все</SelectItem>
-                <SelectItem value="Пн">Пн</SelectItem>
-                <SelectItem value="Вт">Вт</SelectItem>
-                <SelectItem value="Ср">Ср</SelectItem>
-                <SelectItem value="Чт">Чт</SelectItem>
-                <SelectItem value="Пт">Пт</SelectItem>
-                <SelectItem value="Сб">Сб</SelectItem>
-                <SelectItem value="Вс">Вс</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="space-y-1.5">
+              <label className="text-xs text-muted-foreground">День недели</label>
+              <Select value={filterDay} onValueChange={(value) => setFilterDay(value as DayOfWeek | 'Все')}>
+                <SelectTrigger className="w-full h-9">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Все">Все</SelectItem>
+                  <SelectItem value="Пн">Понедельник</SelectItem>
+                  <SelectItem value="Вт">Вторник</SelectItem>
+                  <SelectItem value="Ср">Среда</SelectItem>
+                  <SelectItem value="Чт">Четверг</SelectItem>
+                  <SelectItem value="Пт">Пятница</SelectItem>
+                  <SelectItem value="Сб">Суббота</SelectItem>
+                  <SelectItem value="Вс">Воскресенье</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full sm:w-auto">
-            <label className="text-xs sm:text-sm text-muted-foreground">Станок:</label>
-            <Select value={filterMachine} onValueChange={(value) => setFilterMachine(value)}>
-              <SelectTrigger className="w-full sm:w-32">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Все">Все</SelectItem>
-                {settings.machines.map(machine => (
-                  <SelectItem key={machine} value={machine}>{machine}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+            <div className="space-y-1.5">
+              <label className="text-xs text-muted-foreground">Станок</label>
+              <Select value={filterMachine} onValueChange={(value) => setFilterMachine(value)}>
+                <SelectTrigger className="w-full h-9">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Все">Все станки</SelectItem>
+                  {settings.machines.map(machine => (
+                    <SelectItem key={machine} value={machine}>{machine}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full sm:w-auto">
-            <label className="text-xs sm:text-sm text-muted-foreground">Оператор:</label>
-            <Select value={filterOperator} onValueChange={setFilterOperator}>
-              <SelectTrigger className="w-full sm:w-40">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Все">Все</SelectItem>
-                {uniqueOperators.map(operator => (
-                  <SelectItem key={operator} value={operator}>{operator}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="space-y-1.5">
+              <label className="text-xs text-muted-foreground">Оператор</label>
+              <Select value={filterOperator} onValueChange={setFilterOperator}>
+                <SelectTrigger className="w-full h-9">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Все">Все операторы</SelectItem>
+                  {uniqueOperators.map(operator => (
+                    <SelectItem key={operator} value={operator}>{operator}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
-
-          {(filterDay !== 'Все' || filterMachine !== 'Все' || filterOperator !== 'Все') && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                setFilterDay('Все');
-                setFilterMachine('Все');
-                setFilterOperator('Все');
-              }}
-              className="w-full sm:w-auto"
-            >
-              <Icon name="X" size={16} className="mr-1" />
-              Сбросить
-            </Button>
-          )}
         </div>
 
-        <ProductionTable
-          tasks={filteredTasks}
-          onEdit={handleEditTask}
-          onDelete={handleDeleteTask}
-          onUpdateActual={handleUpdateActual}
-          onUpdatePlanned={handleUpdatePlanned}
-          onViewBlueprint={handleViewBlueprint}
-          onArchive={handleArchiveTask}
-          onUpdateOperationActual={handleUpdateOperationActual}
-          machines={settings.machines}
-        />
+        <div className="hidden md:block">
+          <ProductionTable
+            tasks={filteredTasks}
+            onEdit={handleEditTask}
+            onDelete={handleDeleteTask}
+            onUpdateActual={handleUpdateActual}
+            onUpdatePlanned={handleUpdatePlanned}
+            onViewBlueprint={handleViewBlueprint}
+            onArchive={handleArchiveTask}
+            onUpdateOperationActual={handleUpdateOperationActual}
+            machines={settings.machines}
+          />
+        </div>
+
+        <div className="md:hidden">
+          <ProductionTableMobile
+            tasks={filteredTasks}
+            onEdit={handleEditTask}
+            onDelete={handleDeleteTask}
+            onUpdateActual={handleUpdateActual}
+            onArchive={handleArchiveTask}
+            onUpdateOperationActual={handleUpdateOperationActual}
+            machines={settings.machines}
+          />
+        </div>
 
         <ProductionStats tasks={activeTasks} />
 

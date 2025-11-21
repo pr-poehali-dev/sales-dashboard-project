@@ -54,28 +54,32 @@ export const OperationsView = ({
         
         return (
           <div key={op.id} className="bg-muted/30 rounded p-3 space-y-2">
-            <div className="flex items-center gap-2 text-xs">
-              <Badge variant="outline" className="bg-background text-foreground shrink-0">
-                {op.operationNumber}
-              </Badge>
-              <span className="font-medium flex-1 min-w-0 truncate">{op.operationName}</span>
-              <Badge variant="outline" className={`${getMachineColor(op.machine)} shrink-0`}>
-                {op.machine}
-              </Badge>
-              <span className="text-muted-foreground shrink-0">
-                <Icon name="Clock" size={12} className="inline mr-1" />
-                {op.timePerPart}м
-              </span>
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2 text-xs">
+              <div className="flex items-center gap-2 flex-1 min-w-0">
+                <Badge variant="outline" className="bg-background text-foreground shrink-0">
+                  {op.operationNumber}
+                </Badge>
+                <span className="font-medium flex-1 min-w-0 truncate">{op.operationName}</span>
+              </div>
+              <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+                <Badge variant="outline" className={`${getMachineColor(op.machine)} shrink-0 text-[10px] sm:text-xs`}>
+                  {op.machine}
+                </Badge>
+                <span className="text-muted-foreground shrink-0 text-[10px] sm:text-xs">
+                  <Icon name="Clock" size={12} className="inline mr-1" />
+                  {op.timePerPart}м
+                </span>
+              </div>
             </div>
 
             {!readOnly && onUpdateOperationActual && (
-              <div className="flex items-center gap-2">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
                 <div className="flex items-center gap-1">
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => onUpdateOperationActual(op.id, Math.max(0, actual - 1))}
-                    className="h-6 w-6 p-0 text-sm font-bold"
+                    className="h-7 w-7 p-0 text-sm font-bold"
                   >
                     −
                   </Button>
@@ -85,21 +89,21 @@ export const OperationsView = ({
                     max={plannedQuantity}
                     value={actual}
                     onChange={(e) => onUpdateOperationActual(op.id, parseInt(e.target.value) || 0)}
-                    className="w-14 h-6 text-center text-xs [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    className="w-16 h-7 text-center text-xs [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                   />
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => onUpdateOperationActual(op.id, Math.min(plannedQuantity, actual + 1))}
-                    className="h-6 w-6 p-0 text-sm font-bold"
+                    className="h-7 w-7 p-0 text-sm font-bold"
                   >
                     +
                   </Button>
                   <span className="text-xs text-muted-foreground ml-1">/ {plannedQuantity}</span>
                 </div>
 
-                <div className="flex-1 flex items-center gap-2">
-                  <div className="flex-1 bg-muted rounded-full h-2 overflow-hidden">
+                <div className="flex-1 flex items-center gap-2 min-w-0">
+                  <div className="flex-1 bg-muted rounded-full h-2 overflow-hidden min-w-0">
                     <div 
                       className={`h-full transition-all ${getCompletionColor(completion)}`}
                       style={{ width: `${Math.min(completion, 100)}%` }}

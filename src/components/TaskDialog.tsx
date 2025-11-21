@@ -229,11 +229,11 @@ export const TaskDialog = ({ open, onOpenChange, task, onSave, machines, operato
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{task ? 'Редактировать деталь' : 'Добавить деталь в план'}</DialogTitle>
+          <DialogTitle className="text-base sm:text-lg">{task ? 'Редактировать деталь' : 'Добавить деталь в план'}</DialogTitle>
         </DialogHeader>
         
         <div className="space-y-4 py-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="day">Дата планирования</Label>
               <Popover>
@@ -325,32 +325,32 @@ export const TaskDialog = ({ open, onOpenChange, task, onSave, machines, operato
             {isMultiOperation ? (
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <Label className="text-base font-semibold">Операции</Label>
-                  <Button onClick={addOperation} size="sm" variant="outline">
-                    <Icon name="Plus" size={16} className="mr-1" />
-                    Добавить операцию
+                  <Label className="text-sm sm:text-base font-semibold">Операции</Label>
+                  <Button onClick={addOperation} size="sm" variant="outline" className="h-8 text-xs sm:text-sm">
+                    <Icon name="Plus" size={14} className="sm:mr-1" />
+                    <span className="hidden sm:inline">Добавить операцию</span>
                   </Button>
                 </div>
 
                 <div className="space-y-3">
                   {operations.map((op, index) => (
-                    <div key={op.id} className="border rounded-lg p-4 space-y-3 bg-muted/20">
+                    <div key={op.id} className="border rounded-lg p-3 sm:p-4 space-y-3 bg-muted/20">
                       <div className="flex items-center justify-between">
-                        <Label className="font-semibold">Операция {op.operationNumber}</Label>
+                        <Label className="text-sm font-semibold">Операция {op.operationNumber}</Label>
                         {operations.length > 1 && (
                           <Button
                             onClick={() => removeOperation(op.id)}
                             size="sm"
                             variant="ghost"
-                            className="h-6 w-6 p-0 text-destructive"
+                            className="h-7 w-7 p-0 text-destructive"
                           >
                             <Icon name="X" size={14} />
                           </Button>
                         )}
                       </div>
 
-                      <div className="grid grid-cols-2 gap-3">
-                        <div className="space-y-2">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div className="space-y-2 sm:col-span-2">
                           <Label className="text-xs">Название операции *</Label>
                           <Input
                             value={op.operationName}
@@ -389,7 +389,7 @@ export const TaskDialog = ({ open, onOpenChange, task, onSave, machines, operato
                           </Select>
                         </div>
 
-                        <div className="space-y-2">
+                        <div className="space-y-2 sm:col-span-2">
                           <Label className="text-xs">Оператор *</Label>
                           <Select 
                             value={op.operator} 
