@@ -6,21 +6,32 @@ export interface BlueprintFile {
   type: string;
 }
 
+export interface ProductionOperation {
+  id: string;
+  operationNumber: number;
+  operationName: string;
+  machine: string;
+  operator: string;
+  timePerPart: number;
+}
+
 export interface ProductionTask {
   id: string;
   dayOfWeek: DayOfWeek;
-  scheduledDate?: string; // ISO date string for calendar planning
+  scheduledDate?: string;
   partName: string;
   plannedQuantity: number;
   timePerPart: number;
   machine: string;
   operator: string;
-  blueprint?: string; // Deprecated: старый формат для совместимости
-  blueprints?: BlueprintFile[]; // Новый формат: массив файлов
+  blueprint?: string;
+  blueprints?: BlueprintFile[];
   actualQuantity: number;
   archived?: boolean;
   archivedAt?: string;
   completedAt?: string;
+  isMultiOperation?: boolean;
+  operations?: ProductionOperation[];
 }
 
 export interface MachineLoad {

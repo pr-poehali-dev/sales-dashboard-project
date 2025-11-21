@@ -8,6 +8,12 @@ import { ProductionTask } from "@/types/production";
 import { format } from "date-fns";
 import { ru } from "date-fns/locale";
 import { BlueprintsDialog } from "@/components/BlueprintsDialog";
+import { OperationsView } from "@/components/OperationsView";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 
 interface ProductionTableProps {
   tasks: ProductionTask[];
@@ -114,7 +120,24 @@ export const ProductionTable = ({
                       )}
                     </div>
                   </TableCell>
-                  <TableCell className="font-semibold text-xs sm:text-sm">{task.partName}</TableCell>
+                  <TableCell className="font-semibold text-xs sm:text-sm">
+                    {task.isMultiOperation && task.operations ? (
+                      <Collapsible>
+                        <CollapsibleTrigger className="flex items-center gap-2 hover:text-primary transition-colors">
+                          <Icon name="ChevronRight" size={14} className="transition-transform [[data-state=open]>&]:rotate-90" />
+                          {task.partName}
+                          <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 text-[10px] px-1.5 py-0">
+                            {task.operations.length} оп.
+                          </Badge>
+                        </CollapsibleTrigger>
+                        <CollapsibleContent>
+                          <OperationsView operations={task.operations} machines={machines} />
+                        </CollapsibleContent>
+                      </Collapsible>
+                    ) : (
+                      <div>{task.partName}</div>
+                    )}
+                  </TableCell>
                   <TableCell>
                     <span className="font-medium text-xs sm:text-sm">{task.plannedQuantity}</span>
                   </TableCell>
