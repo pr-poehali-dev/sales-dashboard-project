@@ -23,6 +23,7 @@ interface ProductionTableProps {
   onUpdatePlanned: (id: string, plannedQuantity: number) => void;
   onViewBlueprint: (blueprint?: string) => void;
   onArchive: (id: string) => void;
+  onUpdateOperationActual: (taskId: string, operationId: string, actualQuantity: number) => void;
   machines: string[];
 }
 
@@ -39,6 +40,7 @@ export const ProductionTable = ({
   onUpdatePlanned,
   onViewBlueprint,
   onArchive,
+  onUpdateOperationActual,
   machines
 }: ProductionTableProps) => {
   const [viewingBlueprints, setViewingBlueprints] = useState<ViewingTask | null>(null);
@@ -131,7 +133,12 @@ export const ProductionTable = ({
                           </Badge>
                         </CollapsibleTrigger>
                         <CollapsibleContent>
-                          <OperationsView operations={task.operations} machines={machines} />
+                          <OperationsView 
+                            operations={task.operations} 
+                            machines={machines}
+                            plannedQuantity={task.plannedQuantity}
+                            onUpdateOperationActual={(opId, actualQty) => onUpdateOperationActual(task.id, opId, actualQty)}
+                          />
                         </CollapsibleContent>
                       </Collapsible>
                     ) : (

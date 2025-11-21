@@ -258,6 +258,23 @@ const Index = () => {
     }
   };
 
+  const handleUpdateOperationActual = async (taskId: string, operationId: string, actualQuantity: number) => {
+    try {
+      const task = tasks.find(t => t.id === taskId);
+      if (task && task.operations) {
+        const updatedOperations = task.operations.map(op => 
+          op.id === operationId ? { ...op, actualQuantity } : op
+        );
+        
+        const updatedTask = { ...task, operations: updatedOperations };
+        await productionApi.updateTask(taskId, updatedTask);
+        setTasks(prev => prev.map(t => t.id === taskId ? updatedTask : t));
+      }
+    } catch (error) {
+      toast({ title: 'Ошибка', variant: 'destructive' });
+    }
+  };
+
   const handleViewBlueprint = (blueprint?: string) => {
     if (blueprint) {
       setCurrentBlueprint(blueprint);
@@ -410,6 +427,7 @@ const Index = () => {
           onUpdatePlanned={handleUpdatePlanned}
           onViewBlueprint={handleViewBlueprint}
           onArchive={handleArchiveTask}
+          onUpdateOperationActual={handleUpdateOperationActual}
           machines={settings.machines}
         />
 

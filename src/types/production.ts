@@ -13,6 +13,7 @@ export interface ProductionOperation {
   machine: string;
   operator: string;
   timePerPart: number;
+  actualQuantity?: number;
 }
 
 export interface ProductionTask {

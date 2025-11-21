@@ -69,7 +69,7 @@ export const TaskDialog = ({ open, onOpenChange, task, onSave, machines, operato
       
       if (task.isMultiOperation && task.operations) {
         setIsMultiOperation(true);
-        setOperations(task.operations);
+        setOperations(task.operations.map(op => ({ ...op, actualQuantity: op.actualQuantity || 0 })));
       } else {
         setIsMultiOperation(false);
         setOperations([{
@@ -79,6 +79,7 @@ export const TaskDialog = ({ open, onOpenChange, task, onSave, machines, operato
           machine: task.machine,
           operator: task.operator,
           timePerPart: task.timePerPart,
+          actualQuantity: 0,
         }]);
       }
       
@@ -108,6 +109,7 @@ export const TaskDialog = ({ open, onOpenChange, task, onSave, machines, operato
         machine: machines[0] || '',
         operator: '',
         timePerPart: 0,
+        actualQuantity: 0,
       }]);
     }
   }, [task, open, machines]);
@@ -163,6 +165,7 @@ export const TaskDialog = ({ open, onOpenChange, task, onSave, machines, operato
       machine: machines[0] || '',
       operator: '',
       timePerPart: 0,
+      actualQuantity: 0,
     };
     setOperations([...operations, newOp]);
   };
